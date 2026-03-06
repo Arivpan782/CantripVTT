@@ -28,8 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 # Application definition
 
@@ -133,3 +132,22 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+#Despliegue
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://handre.tech',
+    'https://www.handre.tech',
+]
+
+SECURE_SSL_REDIRECT = True
+
+SESSION_COOKIE_SECURE = True
+
+CSRF_COOKIE_SECURE = True
+
+SECURE_HSTS_SECONDS = 31536000
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+SECURE_HSTS_PRELOAD = True
