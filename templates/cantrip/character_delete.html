@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Borrar personaje{% endblock %}
+
+{% block content %}
+<h1>Borrar personaje: {{ character.name }}</h1>
+
+<p>Esta acción no se puede deshacer.</p>
+<p>Para confirmar, escribe <strong>DELETE</strong>:</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" style="color: red;">Borrar personaje</button>
+</form>
+
+<a href="{% url 'character_detail' character.pk %}">Cancelar</a>
+{% endblock %}

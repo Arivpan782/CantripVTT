@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ character.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ character.name }}</h1>
+
+<p><strong>Campaña:</strong>
+    {% if character.campaign %}
+        {{ character.campaign.name }}
+    {% else %}
+        <em>Sin campaña</em>
+    {% endif %}
+</p>
+
+<h3>Atributos</h3>
+<ul>
+    <li>Fuerza: {{ character.strength }}</li>
+    <li>Destreza: {{ character.dexterity }}</li>
+    <li>Constitución: {{ character.constitution }}</li>
+    <li>Inteligencia: {{ character.intelligence }}</li>
+    <li>Sabiduría: {{ character.wisdom }}</li>
+    <li>Carisma: {{ character.charisma }}</li>
+</ul>
+
+<a href="{% url 'character_list' %}">Volver</a>
+<a href="{% url 'character_edit' character.pk %}">Editar personaje</a>
+<a href="{% url 'character_delete' character.pk %}" style="color: red;">
+    Borrar personaje
+</a>
+
+{% endblock %}

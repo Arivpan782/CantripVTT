@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ campaign.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ campaign.name }}</h1>
+
+<p><strong>Dungeon Master:</strong> {{ campaign.dungeon_master.display_name }}</p>
+
+<p><strong>Tu rol en esta campaña:</strong>
+    {% if role == "DM" %}
+        <span style="color: red; font-weight: bold;">Dungeon Master</span>
+    {% elif role == "Jugador" %}
+        <span style="color: green; font-weight: bold;">Jugador</span>
+    {% else %}
+        <span style="color: gray;">No perteneces a esta campaña</span>
+    {% endif %}
+</p>
+
+<h3>Jugadores</h3>
+<ul>
+    {% for player in campaign.players.all %}
+        <li>{{ player.display_name }}</li>
+    {% empty %}
+        <li>No hay jugadores todavía.</li>
+    {% endfor %}
+</ul>
+
+<h3>Personajes en esta campaña</h3>
+
+<ul>
+    {% for character in characters %}
+        <li>
+            <strong>{{ character.name }}</strong>
+            — jugador: {{ character.user.display_name }}
+        </li>
+    {% empty %}
+        <li>No hay personajes en esta campaña todavía.</li>
+    {% endfor %}
+</ul>
+
+{% if role == "DM" %}
+    <a href="{% url 'campaign_delete' campaign.pk %}" style="color: red;">
+        Borrar campaña
+    </a>
+{% endif %}
+
+
+<a href="{% url 'campaign_list' %}">Volver a mis campañas</a>
+{% endblock %}

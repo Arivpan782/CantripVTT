@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Mis personajes{% endblock %}
+
+{% block content %}
+<h1>Mis personajes</h1>
+
+{% if characters %}
+    <ul>
+        {% for character in characters %}
+            <li>
+                <strong>{{ character.name }}</strong>
+
+                {% if character.campaign %}
+                    — en campaña: {{ character.campaign.name }}
+                {% else %}
+                    — <em>sin campaña</em>
+                {% endif %}
+
+                <a href="{% url 'character_detail' character.pk %}" style="margin-left: 10px;">
+                    Ver detalles
+                </a>
+
+                <a href="{% url 'character_edit' character.pk %}" style="margin-left: 10px; color: orange;">
+                    Editar
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No tienes personajes todavía.</p>
+{% endif %}
+
+<a href="{% url 'character_create' %}">Crear personaje</a>
+{% endblock %}
