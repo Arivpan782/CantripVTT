@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Campañas{% endblock %}
+
+{% block content %}
+<h1>Mis Campañas</h1>
+
+{% if campaigns %}
+    <ul>
+        {% for campaign in campaigns %}
+            <li>
+                <strong>{{ campaign.name }}</strong>
+
+                {% if campaign.dungeon_master == user %}
+                    <span style="color: red; font-weight: bold;">[DM]</span>
+                {% else %}
+                    <span style="color: green; font-weight: bold;">[Jugador]</span>
+                {% endif %}
+
+                <a href="{% url 'campaign_detail' campaign.pk %}" style="margin-left: 10px;">
+                    Ver detalles
+                </a>
+
+                {% if campaign.dungeon_master == user %}
+                    <a href="{% url 'campaign_edit' campaign.pk %}" style="margin-left: 10px; color: orange;">
+                        Editar
+                    </a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No estás en ninguna campaña todavía.</p>
+{% endif %}
+{% endblock %}

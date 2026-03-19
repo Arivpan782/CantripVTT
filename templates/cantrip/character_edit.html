@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ character.name }}{% endblock %}
+
+{% block content %}
+<h1>Editar personaje: {{ character.name }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">Guardar cambios</button>
+</form>
+
+<a href="{% url 'character_detail' character.pk %}">Volver a detalles</a>
+{% endblock %}

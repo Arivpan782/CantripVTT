@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts.apps.AccountsConfig',
+    'cantrip.apps.CantripConfig'
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
