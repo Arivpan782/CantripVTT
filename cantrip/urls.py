@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, CampaignListView, CampaignCreateView, CampaignDetailView, CampaignUpdateView, CharacterCreateView, CharacterListView, CharacterDetailView, CharacterUpdateView, CampaignDeleteView, CharacterDeleteView
+from .views import *
 urlpatterns = [
     path("", home, name="home"),
     path("campaigns/", CampaignListView.as_view(), name="campaign_list"),
@@ -12,5 +12,8 @@ urlpatterns = [
     path("characters/<int:pk>/", CharacterDetailView.as_view(), name="character_detail"),
     path("characters/<int:pk>/edit/", CharacterUpdateView.as_view(), name="character_edit"),
     path("characters/<int:pk>/delete/", CharacterDeleteView.as_view(), name="character_delete"),
+    path("boards/<int:pk>/", BoardDetailView.as_view(), name="board_detail"),
+    path("boards/<int:pk>/tokens/", BoardTokensView.as_view(), name="board_tokens"),
+    path("tokens/<int:pk>/move/", TokenMoveView.as_view(), name="token_move"),
 
 ]
