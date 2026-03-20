@@ -1,10 +1,16 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
-from .models import Campaign, Character
+from .models import Campaign, Character, Board, Token
 from .forms import CampaignForm, CharacterForm, DeleteConfirmForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views import View
+import json
+
+
 
 
 def home(request):
@@ -245,3 +251,99 @@ class CharacterDeleteView(LoginRequiredMixin, DeleteView):
         if form.is_valid():
             return super().post(request, *args, **kwargs)
         return self.get(request, form=form)
+
+
+
+
+class BoardDetailView(LoginRequiredMixin, DetailView):
+    """
+    Vista CBV para ver el tablero de una campaña
+    """
+    model = Board
+    template_name = "cantrip/board_detail.html"
+    context_object_name = "board"
+
+    login_url = "login"
+    redirect_field_name = "next"
+
+    def dispatch(self, request, *args, **kwargs):
+        board = self.get_object()
+        campaign = board.campaign
+        user = request.user
+
+        if campaign.dungeon_master != user and user not in campaign.players.all():
+            raise PermissionDenied("No tienes permiso para ver este tablero.")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        board = self.get_object()
+        campaign = board.campaign
+        user = self.request.user
+
+        if campaign.dungeon_master == user:
+            context["role"] = "DM"
+        else:
+            context["role"] = "Jugador"
+
+        return context
+
+
+class BoardTokensView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
+        campaign = board.campaign
+        user = request.user
+
+        if campaign.dungeon_master != user and user not in campaign.players.all():
+            raise PermissionDenied("No tienes permiso para ver este tablero.")
+
+        tokens = board.tokens.all()
+
+        data = []
+        for token in tokens:
+            data.append({
+                "id": token.id,
+                "x": token.x,
+                "y": token.y,
+                "color": token.color,
+                "label": token.label or "",
+            })
+
+        return JsonResponse({"tokens": data})
+
+
+
+class TokenMoveView(LoginRequiredMixin, View):
+    """
+    Actualiza la posición de un token
+    """
+    login_url = "login"
+    redirect_field_name = "next"
+
+    def post(self, request, pk):
+        token = get_object_or_404(Token, pk=pk)
+        board = token.board
+        campaign = board.campaign
+        user = request.user
+
+        if campaign.dungeon_master != user:
+            raise PermissionDenied("Solo el DM puede mover tokens.")
+
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+
+        x = data.get("x")
+        y = data.get("y")
+
+        if x is None or y is None:
+            return JsonResponse({"error": "Faltan coordenadas"}, status=400)
+
+        token.x = x
+        token.y = y
+        token.save()
+
+        return JsonResponse({"status": "ok"})

@@ -54,3 +54,65 @@ class Character(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.user.email})"
+
+
+class Board(models.Model):
+    """
+    Modelo tablero asociado a una campaña
+    """
+    campaign = models.OneToOneField(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="board",
+    )
+    name = models.CharField(max_length=100)
+    background_image = models.ImageField(
+        upload_to="boards/",
+        blank=True,
+        null=True,
+        help_text="Imagen de fondo del tablero",
+    )
+    config = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Configuración del tablero (zoom, grid, etc.)",
+    )
+
+    def __str__(self):
+        return f"Tablero de {self.campaign.name}"
+
+
+class Token(models.Model):
+    """
+    Modelo token en un tablero
+    """
+    board = models.ForeignKey(
+        Board,
+        on_delete=models.CASCADE,
+        related_name="tokens",
+    )
+    character = models.ForeignKey(
+        Character,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="tokens",
+        help_text="Personaje asociado a este token (opcional)",
+    )
+    label = models.CharField(
+        max_length=100,
+        help_text="Nombre visible del token (si no hay personaje)",
+        blank=True,
+    )
+    x = models.FloatField(help_text="Posición X en el tablero")
+    y = models.FloatField(help_text="Posición Y en el tablero")
+    color = models.CharField(
+        max_length=20,
+        default="#ff0000",
+        help_text="Color del token si no hay imagen",
+    )
+
+    def __str__(self):
+        if self.character:
+            return f"Token de {self.character.name} en {self.board}"
+        return f"Token {self.label or 'sin nombre'} en {self.board}"

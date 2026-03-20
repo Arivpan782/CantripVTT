@@ -141,6 +141,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.handre.tech',
 ]
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 #Descomentar esto cuando termine el desarrollo o haga pruebas de despliegue
 
 # SECURE_SSL_REDIRECT = True

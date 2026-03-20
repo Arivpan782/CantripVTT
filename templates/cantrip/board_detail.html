@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tablero - {{ board.campaign.name }}{% endblock %}
+
+{% block script %}
+<script src="{% static 'cantrip/js/board.js' %}"></script>
+<style>
+#board-root {
+    overflow: auto;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+<h1>Tablero de {{ board.campaign.name }}</h1>
+
+<p>Rol: {{ role }}</p>
+
+<div id="board-root"
+     data-board-id="{{ board.id }}"
+     data-role="{{ role }}"
+     data-background="{% if board.background_image %}{{ board.background_image.url }}{% endif %}">
+</div>
+
+
+{% if board.background_image %}
+    <p>Mapa cargado: {{ board.background_image.url }}</p>
+{% else %}
+    <p>No hay imagen de fondo configurada.</p>
+{% endif %}
+
+
+{% endblock %}
