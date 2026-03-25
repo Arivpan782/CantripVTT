@@ -21,6 +21,14 @@ class Campaign(models.Model):
         blank=True
     )
 
+    board = models.OneToOneField(
+        "Board",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="campaign_board"
+    )
+
     def __str__(self):
         return self.name
 
@@ -60,18 +68,23 @@ class Board(models.Model):
     """
     Modelo tablero asociado a una campaña
     """
-    campaign = models.OneToOneField(
+    campaign = models.ForeignKey(
         Campaign,
         on_delete=models.CASCADE,
-        related_name="board",
+        related_name="boards"
     )
+
     name = models.CharField(max_length=100)
     background_image = models.ImageField(
         upload_to="boards/",
-        blank=True,
         null=True,
-        help_text="Imagen de fondo del tablero",
-    )
+        blank=True)
+
+    background_static = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True)
+
     config = models.JSONField(
         blank=True,
         null=True,

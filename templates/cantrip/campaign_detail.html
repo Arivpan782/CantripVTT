@@ -39,6 +39,23 @@
     {% endfor %}
 </ul>
 
+{% if user == campaign.dungeon_master %}
+    <a href="{% url 'open_board' campaign.id %}">
+        <button>Abrir tablero virtual</button>
+    </a>
+{% endif %}
+
+{% if user != campaign.dungeon_master %}
+    {% if campaign.board %}
+        <a href="{% url 'join_board' campaign.id %}">
+            <button>Entrar al tablero</button>
+        </a>
+    {% else %}
+        <p>El tablero aún no está disponible.</p>
+    {% endif %}
+{% endif %}
+
+
 {% if role == "DM" %}
     <a href="{% url 'campaign_delete' campaign.pk %}" style="color: red;">
         Borrar campaña

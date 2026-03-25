@@ -15,5 +15,10 @@ urlpatterns = [
     path("boards/<int:pk>/", BoardDetailView.as_view(), name="board_detail"),
     path("boards/<int:pk>/tokens/", BoardTokensView.as_view(), name="board_tokens"),
     path("tokens/<int:pk>/move/", TokenMoveView.as_view(), name="token_move"),
+    path("boards/<int:pk>/add_token/", AddTokenView.as_view(), name="add_token"),
+    path("boards/<int:pk>/clear_tokens/", ClearTokensView.as_view(), name="clear_tokens"),
+    path("boards/<int:pk>/set_map/", SetBoardMapView.as_view(), name="set_board_map"),
+    path("campaigns/<int:pk>/open_board/", OpenBoardView.as_view(), name="open_board"),
+    path("campaigns/<int:pk>/join_board/", JoinBoardView.as_view(), name="join_board"),
 
 ]
