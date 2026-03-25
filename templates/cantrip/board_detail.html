@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% load static %}
+{% load static cantrip_filters %}
+
 
 {% block title %}Tablero - {{ board.campaign.name }}{% endblock %}
 
-{% block script %}
-<script src="{% static 'cantrip/js/board.js' %}"></script>
+{% block extra_css %}
 <style>
 #board-root {
     overflow: auto;
 }
 </style>
-
 {% endblock %}
 
 {% block content %}
@@ -18,18 +18,33 @@
 
 <p>Rol: {{ role }}</p>
 
-<div id="board-root"
-     data-board-id="{{ board.id }}"
-     data-role="{{ role }}"
-     data-background="{% if board.background_image %}{{ board.background_image.url }}{% endif %}">
+{% if role == "DM" %}
+<div style="margin-bottom: 10px;">
+    <button id="add-token-btn">Añadir token</button>
+    <button id="clear-tokens-btn">Limpiar tokens</button>
+
+    <select id="map-selector">
+    <option value="">-- Seleccionar mapa de assets --</option>
+
+    {% for map in static_maps %}
+        <option value="{{ map }}">{{ map|basename }}</option>
+    {% endfor %}
+</select>
+
+
 </div>
-
-
-{% if board.background_image %}
-    <p>Mapa cargado: {{ board.background_image.url }}</p>
-{% else %}
-    <p>No hay imagen de fondo configurada.</p>
 {% endif %}
 
 
+<div id="board-root" style="width: 1200px; height: 800px; position: relative;"
+     data-board-id="{{ board.id }}"
+     data-role="{{ role }}"
+     data-background="{% if board.background_image %}{{ board.background_image.url }}{% elif board.background_static %}{% static board.background_static %}{% endif %}">
+</div>
+
+
+
+
+{% block extra_js %}
+<script src="{% static 'cantrip/js/board.js' %}"></script>
 {% endblock %}

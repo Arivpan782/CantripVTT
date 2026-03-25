@@ -1,111 +1,207 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const root = document.getElementById("board-root");
-    if (!root) return;
 
-    const boardId = root.dataset.boardId;
-    const role = root.dataset.role;
-    const backgroundUrl = root.dataset.background;
+const root = document.getElementById("board-root");
+if (!root) {
+    console.error("No se encontró #board-root");
+}
 
-    const canvas = document.createElement("canvas");
-    canvas.style.border = "1px solid #444";
-    root.appendChild(canvas);
+const CANVAS_WIDTH = 1200;
+const CANVAS_HEIGHT = 800;
 
-    const ctx = canvas.getContext("2d");
+const canvas = document.createElement("canvas");
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
+canvas.style.border = "1px solid #444";
+root.appendChild(canvas);
 
-    let backgroundImage = null;
-    let tokens = [];
-    let draggingToken = null;
-    let offsetX = 0;
-    let offsetY = 0;
+const ctx = canvas.getContext("2d");
 
-    let tokensLoaded = false;
-    let imageLoaded = false;
 
-    function tryDraw() {
-        if (tokensLoaded && imageLoaded) {
-            drawBoard();
-        }
-    }
+let backgroundImage = null;
+let tokens = [];
 
-    fetch(`/boards/${boardId}/tokens/`)
-        .then(response => response.json())
-        .then(data => {
-            tokens = data.tokens;
-            tokensLoaded = true;
-            tryDraw();
-        });
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
 
-    if (backgroundUrl) {
-        backgroundImage = new Image();
-        backgroundImage.src = backgroundUrl;
+let draggingToken = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
 
-        backgroundImage.onload = () => {
-            canvas.width = backgroundImage.width;
-            canvas.height = backgroundImage.height;
-            imageLoaded = true;
-            tryDraw();
-        };
-    }
+let panning = false;
+let panStartX = 0;
+let panStartY = 0;
 
-    function drawTokens() {
-        tokens.forEach(token => {
-            ctx.beginPath();
-            ctx.arc(token.x, token.y, 15, 0, Math.PI * 2);
-            ctx.fillStyle = token.color || "#ff0000";
-            ctx.fill();
 
-            ctx.fillStyle = "white";
-            ctx.font = "12px Arial";
-            ctx.fillText(token.label || "", token.x - 10, token.y - 20);
-        });
-    }
 
-    function drawBoard() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+const boardId = root.dataset.boardId;
+const role = root.dataset.role;
+const backgroundUrl = root.dataset.background;
 
-        if (backgroundImage) {
-            ctx.drawImage(backgroundImage, 0, 0);
-        }
 
-        drawTokens();
-    }
 
-    function getTokenAtPosition(x, y) {
-        return tokens.find(token => {
-            const dx = x - token.x;
-            const dy = y - token.y;
-            return Math.sqrt(dx * dx + dy * dy) <= 15;
-        });
-    }
+const addBtn = document.getElementById("add-token-btn");
+const clearBtn = document.getElementById("clear-tokens-btn");
+const mapSelector = document.getElementById("map-selector");
 
-    canvas.addEventListener("mousedown", (e) => {
-        if (role !== "DM") return;
+function getCSRFToken() {
+    const cookieValue = document.cookie
+        .split("; ")
+        .find(row => row.startsWith("csrftoken="));
+    return cookieValue ? cookieValue.split("=")[1] : "";
+}
 
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const token = getTokenAtPosition(mouseX, mouseY);
-        if (token) {
-            draggingToken = token;
-            offsetX = mouseX - token.x;
-            offsetY = mouseY - token.y;
-        }
+if (addBtn) {
+    addBtn.addEventListener("click", () => {
+        fetch(`/boards/${boardId}/add_token/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCSRFToken() }
+        }).then(() => location.reload());
     });
+}
 
-    canvas.addEventListener("mousemove", (e) => {
-        if (!draggingToken) return;
+if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+        fetch(`/boards/${boardId}/clear_tokens/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCSRFToken() }
+        }).then(() => location.reload());
+    });
+}
 
-        const rect = canvas.getBoundingClientRect();
-        draggingToken.x = e.clientX - rect.left - offsetX;
-        draggingToken.y = e.clientY - rect.top - offsetY;
+if (mapSelector) {
+    mapSelector.addEventListener("change", () => {
+        const selected = mapSelector.value;
+        if (!selected) return;
 
+        fetch(`/boards/${boardId}/set_map/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCSRFToken(),
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `map=${selected}`
+        }).then(() => location.reload());
+    });
+}
+
+
+
+if (backgroundUrl) {
+    backgroundImage = new Image();
+    backgroundImage.src = backgroundUrl;
+
+    backgroundImage.onload = () => {
+        const scaleX = CANVAS_WIDTH / backgroundImage.width;
+        const scaleY = CANVAS_HEIGHT / backgroundImage.height;
+        scale = Math.min(scaleX, scaleY);
+        drawBoard();
+    };
+}
+
+
+
+fetch(`/boards/${boardId}/tokens/`)
+    .then(response => response.json())
+    .then(data => {
+        tokens = data.tokens;
         drawBoard();
     });
 
-    canvas.addEventListener("mouseup", () => {
-        if (!draggingToken) return;
 
+
+function drawBoard() {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    if (backgroundImage) {
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.scale(scale, scale);
+        ctx.drawImage(backgroundImage, 0, 0);
+        ctx.restore();
+    }
+
+    drawTokens();
+}
+
+function drawTokens() {
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    tokens.forEach(token => {
+        ctx.beginPath();
+        ctx.arc(token.x, token.y, 15 / scale, 0, Math.PI * 2);
+        ctx.fillStyle = token.color || "#ff0000";
+        ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.font = `${12 / scale}px Arial`;
+        ctx.fillText(token.label || "", token.x - 10 / scale, token.y - 20 / scale);
+    });
+
+    ctx.restore();
+}
+
+
+
+canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+
+    const zoomFactor = 1.1;
+    const mouseX = e.offsetX;
+    const mouseY = e.offsetY;
+
+    const direction = e.deltaY < 0 ? 1 : -1;
+    const newScale = direction > 0 ? scale * zoomFactor : scale / zoomFactor;
+
+    offsetX = mouseX - (mouseX - offsetX) * (newScale / scale);
+    offsetY = mouseY - (mouseY - offsetY) * (newScale / scale);
+
+    scale = newScale;
+    drawBoard();
+});
+
+
+canvas.addEventListener("mousedown", (e) => {
+    if (e.button === 1 || e.button === 2) {
+        panning = true;
+        panStartX = e.clientX - offsetX;
+        panStartY = e.clientY - offsetY;
+    }
+
+    if (role !== "DM") return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left - offsetX) / scale;
+    const mouseY = (e.clientY - rect.top - offsetY) / scale;
+
+    const token = tokens.find(t => Math.hypot(t.x - mouseX, t.y - mouseY) <= 15 / scale);
+
+    if (token) {
+        draggingToken = token;
+        dragOffsetX = mouseX - token.x;
+        dragOffsetY = mouseY - token.y;
+    }
+});
+
+canvas.addEventListener("mousemove", (e) => {
+    if (panning) {
+        offsetX = e.clientX - panStartX;
+        offsetY = e.clientY - panStartY;
+        drawBoard();
+        return;
+    }
+
+    if (draggingToken) {
+        const rect = canvas.getBoundingClientRect();
+        draggingToken.x = (e.clientX - rect.left - offsetX) / scale - dragOffsetX;
+        draggingToken.y = (e.clientY - rect.top - offsetY) / scale - dragOffsetY;
+        drawBoard();
+    }
+});
+
+canvas.addEventListener("mouseup", () => {
+    if (draggingToken) {
         fetch(`/tokens/${draggingToken.id}/move/`, {
             method: "POST",
             headers: {
@@ -117,14 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 y: draggingToken.y,
             }),
         });
-
-        draggingToken = null;
-    });
-
-    function getCSRFToken() {
-        const cookieValue = document.cookie
-            .split("; ")
-            .find(row => row.startsWith("csrftoken="));
-        return cookieValue ? cookieValue.split("=")[1] : "";
     }
+
+    draggingToken = null;
+    panning = false;
 });

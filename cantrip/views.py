@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from .models import Campaign, Character, Board, Token
@@ -9,6 +9,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
 import json
+import os
+from django.conf import settings
 
 
 
@@ -254,6 +256,18 @@ class CharacterDeleteView(LoginRequiredMixin, DeleteView):
 
 
 
+def list_static_maps():
+    maps_dir = os.path.join(settings.BASE_DIR, "static", "assets", "maps")
+    files = []
+
+    if os.path.isdir(maps_dir):
+        for f in os.listdir(maps_dir):
+            if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+                files.append(f"assets/maps/{f}")
+
+    return files
+
+
 
 class BoardDetailView(LoginRequiredMixin, DetailView):
     """
@@ -278,14 +292,11 @@ class BoardDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        board = self.get_object()
-        campaign = board.campaign
-        user = self.request.user
 
-        if campaign.dungeon_master == user:
-            context["role"] = "DM"
-        else:
-            context["role"] = "Jugador"
+        campaign = self.object.campaign
+        context["role"] = "DM" if self.request.user == campaign.dungeon_master else "PLAYER"
+
+        context["static_maps"] = list_static_maps()
 
         return context
 
@@ -313,6 +324,22 @@ class BoardTokensView(LoginRequiredMixin, View):
 
         return JsonResponse({"tokens": data})
 
+class SetBoardMapView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
+        campaign = board.campaign
+
+        if request.user != campaign.dungeon_master:
+            raise PermissionDenied()
+
+        map_path = request.POST.get("map")
+
+        # Si elige un mapa estático, limpiamos el mapa subido
+        board.background_static = map_path
+        board.background_image = None
+        board.save()
+
+        return JsonResponse({"status": "ok"})
 
 
 class TokenMoveView(LoginRequiredMixin, View):
@@ -347,3 +374,62 @@ class TokenMoveView(LoginRequiredMixin, View):
         token.save()
 
         return JsonResponse({"status": "ok"})
+
+
+class AddTokenView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
+        campaign = board.campaign
+
+        if request.user != campaign.dungeon_master:
+            raise PermissionDenied()
+
+        Token.objects.create(
+            board=board,
+            x=board.background_image.width / 2 if board.background_image else 200,
+            y=board.background_image.height / 2 if board.background_image else 200,
+            color="#ff0000",
+            label="Nuevo"
+        )
+
+        return JsonResponse({"status": "ok"})
+
+
+class ClearTokensView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
+        campaign = board.campaign
+
+        if request.user != campaign.dungeon_master:
+            raise PermissionDenied()
+
+        board.tokens.all().delete()
+
+        return JsonResponse({"status": "ok"})
+
+
+class OpenBoardView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        campaign = get_object_or_404(Campaign, pk=pk)
+
+        if request.user != campaign.dungeon_master:
+            raise PermissionDenied()
+
+        if campaign.board:
+            return redirect("board_detail", pk=campaign.board.id)
+
+        board = Board.objects.create(campaign=campaign)
+        campaign.board = board
+        campaign.save()
+
+        return redirect("board_detail", pk=board.id)
+
+
+class JoinBoardView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        campaign = get_object_or_404(Campaign, pk=pk)
+
+        if not campaign.board:
+            return redirect("campaign_detail", pk=pk)
+
+        return redirect("board_detail", pk=campaign.board.id)
