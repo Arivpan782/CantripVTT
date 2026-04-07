@@ -257,15 +257,9 @@ class CharacterDeleteView(LoginRequiredMixin, DeleteView):
 
 
 def list_static_maps():
-    maps_dir = os.path.join(settings.BASE_DIR, "static", "assets", "maps")
-    files = []
+    folder = os.path.join(settings.BASE_DIR, "static", "assets", "maps")
+    return [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
 
-    if os.path.isdir(maps_dir):
-        for f in os.listdir(maps_dir):
-            if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
-                files.append(f"assets/maps/{f}")
-
-    return files
 
 
 
@@ -384,15 +378,25 @@ class AddTokenView(LoginRequiredMixin, View):
         if request.user != campaign.dungeon_master:
             raise PermissionDenied()
 
-        Token.objects.create(
+        token = Token.objects.create(
             board=board,
-            x=board.background_image.width / 2 if board.background_image else 200,
-            y=board.background_image.height / 2 if board.background_image else 200,
+            x=200,
+            y=200,
             color="#ff0000",
             label="Nuevo"
         )
 
-        return JsonResponse({"status": "ok"})
+        return JsonResponse({
+            "token": {
+                "id": token.id,
+                "x": token.x,
+                "y": token.y,
+                "label": token.label,
+                "color": token.color,
+            }
+        })
+
+
 
 
 class ClearTokensView(LoginRequiredMixin, View):
@@ -406,6 +410,7 @@ class ClearTokensView(LoginRequiredMixin, View):
         board.tokens.all().delete()
 
         return JsonResponse({"status": "ok"})
+
 
 
 class OpenBoardView(LoginRequiredMixin, View):

@@ -40,13 +40,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts.apps.AccountsConfig',
-    'cantrip.apps.CantripConfig'
+    'channels',
+    'cantrip.apps.CantripConfig',
 ]
+
+ASGI_APPLICATION = "CantripVTT.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
 
 AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -158,3 +169,5 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # SECURE_HSTS_PRELOAD = True
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
