@@ -1,8 +1,23 @@
-
 const root = document.getElementById("board-root");
 if (!root) {
     console.error("No se encontró #board-root");
 }
+
+const chatMessages = document.getElementById("chat-messages");
+const chatInput = document.getElementById("chat-input");
+const chatSendBtn = document.getElementById("chat-send-btn");
+
+const addBtn = document.getElementById("add-token-btn");
+const clearBtn = document.getElementById("clear-tokens-btn");
+const mapSelector = document.getElementById("map-selector");
+
+const boardId = root.dataset.boardId;
+const role = root.dataset.role;
+const backgroundUrl = root.dataset.background;
+
+const ws = new WebSocket(`ws://${window.location.host}/ws/board/${boardId}/`);
+
+let chatLog = [];
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 800;
@@ -14,7 +29,6 @@ canvas.style.border = "1px solid #444";
 root.appendChild(canvas);
 
 const ctx = canvas.getContext("2d");
-
 
 let backgroundImage = null;
 let tokens = [];
@@ -31,18 +45,6 @@ let panning = false;
 let panStartX = 0;
 let panStartY = 0;
 
-
-
-const boardId = root.dataset.boardId;
-const role = root.dataset.role;
-const backgroundUrl = root.dataset.background;
-
-
-
-const addBtn = document.getElementById("add-token-btn");
-const clearBtn = document.getElementById("clear-tokens-btn");
-const mapSelector = document.getElementById("map-selector");
-
 function getCSRFToken() {
     const cookieValue = document.cookie
         .split("; ")
@@ -55,7 +57,18 @@ if (addBtn) {
         fetch(`/boards/${boardId}/add_token/`, {
             method: "POST",
             headers: { "X-CSRFToken": getCSRFToken() }
-        }).then(() => location.reload());
+        })
+        .then(response => response.json())
+        .then(data => {
+            tokens.push(data.token);
+            drawBoard();
+
+            ws.send(JSON.stringify({
+                type: "token_add",
+                token: data.token
+            }));
+        })
+        .catch(err => console.error("Error en add_token:", err));
     });
 }
 
@@ -64,9 +77,20 @@ if (clearBtn) {
         fetch(`/boards/${boardId}/clear_tokens/`, {
             method: "POST",
             headers: { "X-CSRFToken": getCSRFToken() }
-        }).then(() => location.reload());
+        })
+        .then(response => response.json())
+        .then(() => {
+            tokens = [];
+            drawBoard();
+
+            ws.send(JSON.stringify({
+                type: "token_clear"
+            }));
+        })
+        .catch(err => console.error("Error en clear_tokens:", err));
     });
 }
+
 
 if (mapSelector) {
     mapSelector.addEventListener("change", () => {
@@ -80,11 +104,28 @@ if (mapSelector) {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
             body: `map=${selected}`
-        }).then(() => location.reload());
+        }).then(() => {
+            const url = `/static/assets/maps/${selected}`;
+
+            ws.send(JSON.stringify({
+                type: "map_change",
+                background_url: url
+            }));
+
+            backgroundImage = new Image();
+            backgroundImage.src = url;
+            backgroundImage.onload = () => {
+                offsetX = 0;
+                offsetY = 0;
+                scale = 1;
+                const scaleX = CANVAS_WIDTH / backgroundImage.width;
+                const scaleY = CANVAS_HEIGHT / backgroundImage.height;
+                scale = Math.min(scaleX, scaleY);
+                drawBoard();
+            };
+        });
     });
 }
-
-
 
 if (backgroundUrl) {
     backgroundImage = new Image();
@@ -98,16 +139,12 @@ if (backgroundUrl) {
     };
 }
 
-
-
 fetch(`/boards/${boardId}/tokens/`)
     .then(response => response.json())
     .then(data => {
         tokens = data.tokens;
         drawBoard();
     });
-
-
 
 function drawBoard() {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -142,8 +179,6 @@ function drawTokens() {
     ctx.restore();
 }
 
-
-
 canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
 
@@ -160,7 +195,6 @@ canvas.addEventListener("wheel", (e) => {
     scale = newScale;
     drawBoard();
 });
-
 
 canvas.addEventListener("mousedown", (e) => {
     if (e.button === 1 || e.button === 2) {
@@ -213,8 +247,126 @@ canvas.addEventListener("mouseup", () => {
                 y: draggingToken.y,
             }),
         });
+
+        ws.send(JSON.stringify({
+            type: "token_move",
+            token_id: draggingToken.id,
+            x: draggingToken.x,
+            y: draggingToken.y,
+        }));
     }
 
     draggingToken = null;
     panning = false;
 });
+
+function renderChat() {
+    chatMessages.innerHTML = "";
+
+    chatLog.forEach(msg => {
+        const div = document.createElement("div");
+        div.style.marginBottom = "6px";
+
+        const meta = document.createElement("div");
+        meta.style.fontSize = "11px";
+        meta.style.color = "#aaa";
+        meta.textContent = `[${msg.time}] ${msg.author}`;
+
+        const text = document.createElement("div");
+        text.textContent = msg.text;
+
+        div.appendChild(meta);
+        div.appendChild(text);
+
+        chatMessages.appendChild(div);
+    });
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addChatMessage(text, author = username) {
+    if (!text.trim()) return;
+
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    ws.send(JSON.stringify({
+        type: "chat",
+        text: text.trim(),
+        author,
+        time,
+    }));
+}
+
+if (chatSendBtn && chatInput) {
+    chatSendBtn.addEventListener("click", () => {
+        addChatMessage(chatInput.value);
+        chatInput.value = "";
+        chatInput.focus();
+    });
+
+    chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            addChatMessage(chatInput.value);
+            chatInput.value = "";
+        }
+    });
+}
+
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "chat_message") {
+        chatLog.push(data);
+        renderChat();
+        return;
+    }
+
+    if (data.type === "token_move") {
+        const token = tokens.find(t => t.id === data.token_id);
+        if (token) {
+            token.x = data.x;
+            token.y = data.y;
+            drawBoard();
+        }
+        return;
+    }
+
+    if (data.type === "map_change") {
+    backgroundImage = new Image();
+    backgroundImage.src = data.background_url;
+
+    backgroundImage.onload = () => {
+        offsetX = 0;
+        offsetY = 0;
+        scale = 1;
+
+        const scaleX = CANVAS_WIDTH / backgroundImage.width;
+        const scaleY = CANVAS_HEIGHT / backgroundImage.height;
+        scale = Math.min(scaleX, scaleY);
+
+        drawBoard();
+    };
+    return;
+    }
+
+    if (data.type === "token_add") {
+    if (!data.token) return;
+
+    if (!tokens.find(t => t.id === data.token.id)) {
+        tokens.push(data.token);
+    }
+
+    drawBoard();
+    return;
+}
+
+
+    if (data.type === "token_clear") {
+        tokens = [];
+        drawBoard();
+        return;
+    }
+
+};
