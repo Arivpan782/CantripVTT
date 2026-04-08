@@ -11,6 +11,8 @@ from django.views import View
 import json
 import os
 from django.conf import settings
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 
@@ -438,3 +440,43 @@ class JoinBoardView(LoginRequiredMixin, View):
             return redirect("campaign_detail", pk=pk)
 
         return redirect("board_detail", pk=campaign.board.id)
+
+
+class RollDiceView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
+        campaign = board.campaign
+        user = request.user
+
+        if user != campaign.dungeon_master and user not in campaign.players.all():
+            return JsonResponse({"error": "No autorizado"}, status=403)
+
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+
+        sides = int(data.get("sides", 0))
+        count = int(data.get("count", 0))
+
+        if sides not in [4, 6, 8, 10, 12, 20, 100] or count < 1:
+            return JsonResponse({"error": "Parámetros inválidos"}, status=400)
+
+        import random
+        rolls = [random.randint(1, sides) for _ in range(count)]
+        total = sum(rolls)
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"board_{pk}",
+            {
+                "type": "dice_roll",
+                "author": user.username,
+                "notation": f"{count}d{sides}",
+                "results": rolls,
+                "total": total,
+            }
+        )
+
+        return JsonResponse({"status": "ok"})
+

@@ -369,4 +369,78 @@ ws.onmessage = (event) => {
         return;
     }
 
+    if (data.type === "dice_roll") {
+    const msg = `${data.author}: ${data.notation} => ${data.results.join(" + ")} = ${data.total}`;
+
+    chatLog.push({
+        author: data.author,
+        text: msg,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    });
+
+    renderChat();
+    return;
+}
+
+
+
+
 };
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const diceModal = document.getElementById("dice-modal");
+    const openDiceBtn = document.getElementById("open-dice-btn");
+    const closeDiceBtn = document.getElementById("dice-close");
+
+    if (!diceModal) {
+        console.warn("Dice modal not found in DOM.");
+        return;
+    }
+
+    if (openDiceBtn) {
+        openDiceBtn.addEventListener("click", () => {
+            diceModal.classList.remove("hidden");
+        });
+    }
+
+    if (closeDiceBtn) {
+        closeDiceBtn.addEventListener("click", () => {
+            diceModal.classList.add("hidden");
+        });
+    }
+
+    diceModal.addEventListener("click", (e) => {
+        if (e.target === diceModal) {
+            diceModal.classList.add("hidden");
+        }
+    });
+
+
+    document.querySelectorAll(".dice-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+
+            const sides = parseInt(btn.dataset.sides);
+            const countInput = document.querySelector(`.dice-count[data-sides="${sides}"]`);
+            const count = parseInt(countInput.value);
+
+            fetch(`/boards/${boardId}/roll_dice/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({ sides, count })
+            }).catch(err => console.error("Error enviando tirada:", err));
+
+            diceModal.classList.add("hidden");
+        });
+    });
+
+});
+
+
+
