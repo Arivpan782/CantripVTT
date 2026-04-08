@@ -20,5 +20,7 @@ urlpatterns = [
     path("boards/<int:pk>/set_map/", SetBoardMapView.as_view(), name="set_board_map"),
     path("campaigns/<int:pk>/open_board/", OpenBoardView.as_view(), name="open_board"),
     path("campaigns/<int:pk>/join_board/", JoinBoardView.as_view(), name="join_board"),
+    path("boards/<int:pk>/roll_dice/", RollDiceView.as_view(), name="roll_dice"),
+
 
 ]

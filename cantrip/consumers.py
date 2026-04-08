@@ -86,3 +86,15 @@ class BoardChatConsumer(AsyncWebsocketConsumer):
 
     async def token_clear(self, event):
         await self.send(text_data=json.dumps(event))
+
+    async def dice_roll(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "dice_roll",
+            "author": event["author"],
+            "notation": event["notation"],
+            "results": event["results"],
+            "total": event["total"],
+        }))
+
+
+
