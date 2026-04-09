@@ -5,7 +5,7 @@ from .models import Campaign, Character, Board, Token
 from .forms import CampaignForm, CharacterForm, DeleteConfirmForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views import View
 import json
@@ -13,8 +13,9 @@ import os
 from django.conf import settings
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
-
+from django.views.decorators.http import require_POST
+from django.core.files.base import ContentFile
+import base64
 
 
 def home(request):
@@ -294,6 +295,22 @@ class BoardDetailView(LoginRequiredMixin, DetailView):
 
         context["static_maps"] = list_static_maps()
 
+        context["characters"] = campaign.characters.select_related("user")
+
+        import os
+        from django.conf import settings
+
+        tokens_path = os.path.join(settings.BASE_DIR, "static/assets/tokens")
+        files = sorted(f for f in os.listdir(tokens_path) if f.endswith(".png"))
+
+        context["static_tokens"] = [
+            {
+                "path": f"assets/tokens/{f}",
+                "name": os.path.splitext(f)[0],
+            }
+            for f in files
+        ]
+
         return context
 
 
@@ -372,31 +389,85 @@ class TokenMoveView(LoginRequiredMixin, View):
         return JsonResponse({"status": "ok"})
 
 
-class AddTokenView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        board = get_object_or_404(Board, pk=pk)
-        campaign = board.campaign
 
-        if request.user != campaign.dungeon_master:
-            raise PermissionDenied()
+@require_POST
+def add_token(request, board_id):
+    board = get_object_or_404(Board, id=board_id)
+    campaign = board.campaign
 
-        token = Token.objects.create(
-            board=board,
-            x=200,
-            y=200,
-            color="#ff0000",
-            label="Nuevo"
-        )
+    if request.user != campaign.dungeon_master:
+        return HttpResponseForbidden("Solo el DM puede añadir tokens.")
 
-        return JsonResponse({
-            "token": {
-                "id": token.id,
-                "x": token.x,
-                "y": token.y,
-                "label": token.label,
-                "color": token.color,
-            }
-        })
+    token_type = request.POST.get("type")
+    x = float(request.POST.get("x", 100))
+    y = float(request.POST.get("y", 100))
+    label = request.POST.get("label", "").strip()
+    size = int(request.POST.get("size", 60))
+
+    token = Token(board=board, x=x, y=y)
+
+    token.size = size
+
+
+    if token_type == "character":
+        character_id = request.POST.get("character_id")
+        character = get_object_or_404(Character, id=character_id, campaign=campaign)
+        token.character = character
+        token.label = character.name
+
+    elif token_type == "static":
+        static_path = request.POST.get("static_path")
+        if not static_path:
+            return JsonResponse({"error": "Falta static_path"}, status=400)
+
+        from django.conf import settings
+
+        static_full_path = os.path.join(settings.BASE_DIR, "static", static_path)
+        filename = os.path.basename(static_path)
+
+        with open(static_full_path, "rb") as f:
+            token.image.save(filename, ContentFile(f.read()), save=False)
+
+        token.label = label or os.path.splitext(filename)[0]
+
+    elif token_type == "upload":
+        if "upload" not in request.FILES:
+            return JsonResponse({"error": "Falta archivo upload"}, status=400)
+
+        file = request.FILES["upload"]
+        token.image = file
+        token.label = label or os.path.splitext(file.name)[0]
+
+
+    else:
+        return JsonResponse({"error": "Tipo de token inválido"}, status=400)
+
+    token.save()
+
+    return JsonResponse({
+        "token": {
+            "id": token.id,
+            "x": token.x,
+            "y": token.y,
+            "label": token.label,
+            "image": token.get_image(),
+            "color": token.color,
+            "size": token.size,
+        }
+    })
+
+
+@require_POST
+def delete_token(request, token_id):
+    token = get_object_or_404(Token, id=token_id)
+    board = token.board
+
+    if request.user != board.campaign.dungeon_master:
+        return HttpResponseForbidden("Solo el DM puede borrar tokens.")
+
+    token.delete()
+
+    return JsonResponse({"status": "ok"})
 
 
 

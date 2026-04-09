@@ -71,6 +71,15 @@ class BoardChatConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+        elif msg_type == "token_delete":
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "token_delete",
+                    "token_id": data["token_id"],
+                }
+            )
+
     async def chat_message(self, event):
         print("ENVIANDO A CLIENTE:", event)
         await self.send(text_data=json.dumps(event))
@@ -95,6 +104,10 @@ class BoardChatConsumer(AsyncWebsocketConsumer):
             "results": event["results"],
             "total": event["total"],
         }))
+
+    async def token_delete(self, event):
+        await self.send(text_data=json.dumps(event))
+
 
 
 

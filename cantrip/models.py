@@ -36,7 +36,7 @@ class Campaign(models.Model):
 class Character(models.Model):
     """
     Modelo personaje con nombre, campaign y user asociados y atributos
-    """
+     """
     name = models.CharField(max_length=100)
 
     user = models.ForeignKey(
@@ -53,6 +53,18 @@ class Character(models.Model):
         blank=True
     )
 
+    image_upload = models.ImageField(
+        upload_to="characters/",
+        null=True,
+        blank=True
+    )
+
+    image_static = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
     strength = models.IntegerField(default=10)
     dexterity = models.IntegerField(default=10)
     constitution = models.IntegerField(default=10)
@@ -62,6 +74,13 @@ class Character(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.user.email})"
+
+    def get_image(self):
+        if self.image_upload:
+            return self.image_upload.url
+        if self.image_static:
+            return f"/static/{self.image_static}"
+        return None
 
 
 class Board(models.Model):
@@ -117,6 +136,13 @@ class Token(models.Model):
         help_text="Nombre visible del token (si no hay personaje)",
         blank=True,
     )
+    image = models.ImageField(
+        upload_to="tokens/",
+        blank=True,
+        null=True,
+        help_text="Imagen del token (si no es un personaje)"
+    )
+    size = models.IntegerField(default=60, help_text="Tamaño base del token en píxeles")
     x = models.FloatField(help_text="Posición X en el tablero")
     y = models.FloatField(help_text="Posición Y en el tablero")
     color = models.CharField(
@@ -129,3 +155,10 @@ class Token(models.Model):
         if self.character:
             return f"Token de {self.character.name} en {self.board}"
         return f"Token {self.label or 'sin nombre'} en {self.board}"
+
+    def get_image(self):
+        if self.character:
+            return self.character.get_image()
+        if self.image:
+            return self.image.url
+        return None

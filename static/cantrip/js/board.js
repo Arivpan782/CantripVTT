@@ -7,7 +7,6 @@ const chatMessages = document.getElementById("chat-messages");
 const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
 
-const addBtn = document.getElementById("add-token-btn");
 const clearBtn = document.getElementById("clear-tokens-btn");
 const mapSelector = document.getElementById("map-selector");
 
@@ -52,25 +51,7 @@ function getCSRFToken() {
     return cookieValue ? cookieValue.split("=")[1] : "";
 }
 
-if (addBtn) {
-    addBtn.addEventListener("click", () => {
-        fetch(`/boards/${boardId}/add_token/`, {
-            method: "POST",
-            headers: { "X-CSRFToken": getCSRFToken() }
-        })
-        .then(response => response.json())
-        .then(data => {
-            tokens.push(data.token);
-            drawBoard();
 
-            ws.send(JSON.stringify({
-                type: "token_add",
-                token: data.token
-            }));
-        })
-        .catch(err => console.error("Error en add_token:", err));
-    });
-}
 
 if (clearBtn) {
     clearBtn.addEventListener("click", () => {
@@ -160,24 +141,70 @@ function drawBoard() {
     drawTokens();
 }
 
+const imageCache = {};
+
 function drawTokens() {
     ctx.save();
     ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
 
     tokens.forEach(token => {
-        ctx.beginPath();
-        ctx.arc(token.x, token.y, 15 / scale, 0, Math.PI * 2);
-        ctx.fillStyle = token.color || "#ff0000";
-        ctx.fill();
+        if (!token) return;
 
-        ctx.fillStyle = "white";
-        ctx.font = `${12 / scale}px Arial`;
-        ctx.fillText(token.label || "", token.x - 10 / scale, token.y - 20 / scale);
+        const baseSize = token.size || 60;
+        const size = baseSize / scale;
+        const radius = size / 2;
+
+        if (token.image) {
+
+            if (!imageCache[token.image]) {
+                const img = new Image();
+                img.src = token.image;
+                imageCache[token.image] = img;
+
+                img.onload = () => drawBoard();
+                img.onerror = () => console.warn("No se pudo cargar la imagen:", token.image);
+            }
+
+            const img = imageCache[token.image];
+
+            if (img.complete && img.naturalWidth > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(token.x, token.y, radius, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(img, token.x - radius, token.y - radius, size, size);
+                ctx.restore();
+            }
+
+        } else {
+            ctx.beginPath();
+            ctx.arc(token.x, token.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = token.color || "#ff0000";
+            ctx.fill();
+        }
+
+        if (token.label) {
+            ctx.fillStyle = "white";
+            ctx.font = `${12 / scale}px Arial`;
+            ctx.fillText(token.label, token.x - radius, token.y - radius - 5);
+        }
     });
 
     ctx.restore();
 }
+
+function openTokenMenu(x, y, token) {
+    const menu = document.getElementById("token-menu");
+    if (!menu) return;
+
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.classList.remove("hidden");
+
+    menu.dataset.tokenId = token.id;
+}
+
 
 canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
@@ -259,6 +286,54 @@ canvas.addEventListener("mouseup", () => {
     draggingToken = null;
     panning = false;
 });
+
+canvas.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - offsetX) / scale;
+    const y = (e.clientY - rect.top - offsetY) / scale;
+
+    const token = tokens.find(t => {
+        const baseSize = t.size || 60;
+        const size = baseSize / scale;
+        const radius = size / 2;
+        return Math.hypot(t.x - x, t.y - y) <= radius;
+    });
+
+    if (token) {
+        openTokenMenu(e.clientX, e.clientY, token);
+    }
+});
+
+document.addEventListener("click", () => {
+    const menu = document.getElementById("token-menu");
+    if (menu) {
+        menu.classList.add("hidden");
+    }
+});
+
+const deleteTokenBtn = document.getElementById("delete-token-btn");
+
+if (deleteTokenBtn) {
+    deleteTokenBtn.addEventListener("click", () => {
+    const menu = document.getElementById("token-menu");
+    const tokenId = parseInt(menu.dataset.tokenId);
+
+    fetch(`/token/${tokenId}/delete/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRFToken() }
+    });
+
+    ws.send(JSON.stringify({
+        type: "token_delete",
+        token_id: tokenId
+    }));
+
+    menu.classList.add("hidden");
+});
+
+}
 
 function renderChat() {
     chatMessages.innerHTML = "";
@@ -362,12 +437,21 @@ ws.onmessage = (event) => {
     return;
 }
 
-
     if (data.type === "token_clear") {
         tokens = [];
         drawBoard();
         return;
     }
+
+    if (data.type === "token_delete") {
+    const index = tokens.findIndex(t => t.id === data.token_id);
+    if (index !== -1) {
+        tokens.splice(index, 1);
+        drawBoard();
+    }
+    return;
+}
+
 
     if (data.type === "dice_roll") {
     const msg = `${data.author}: ${data.notation} => ${data.results.join(" + ")} = ${data.total}`;
@@ -441,6 +525,125 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 });
+
+
+
+const addTokenBtn = document.getElementById("add-token-btn");
+const addTokenModal = document.getElementById("add-token-modal");
+const closeAddToken = document.getElementById("close-add-token");
+const manualName = document.getElementById("manual-token-name").value;
+
+if (addTokenBtn) {
+    addTokenBtn.addEventListener("click", () => {
+        addTokenModal.classList.remove("hidden");
+    });
+}
+
+if (closeAddToken) {
+    closeAddToken.addEventListener("click", () => {
+        addTokenModal.classList.add("hidden");
+    });
+}
+
+let selectedType = null;
+let selectedCharacterId = null;
+let selectedStaticPath = null;
+let selectedUploadFile = null;
+
+const tokenChoices = document.querySelectorAll(".token-choice");
+
+tokenChoices.forEach(choice => {
+    choice.addEventListener("click", () => {
+
+        tokenChoices.forEach(c => c.style.outline = "none");
+
+        choice.style.outline = "3px solid #4caf50";
+
+        selectedType = choice.dataset.type;
+
+        if (selectedType === "character") {
+            selectedCharacterId = choice.dataset.id;
+            selectedStaticPath = null;
+            selectedUploadFile = null;
+        }
+
+        if (selectedType === "static") {
+            selectedStaticPath = choice.dataset.path;
+            selectedCharacterId = null;
+            selectedUploadFile = null;
+        }
+    });
+});
+
+const uploadInput = document.getElementById("token-upload");
+
+if (uploadInput) {
+    uploadInput.addEventListener("change", () => {
+        if (uploadInput.files.length > 0) {
+            selectedType = "upload";
+            selectedUploadFile = uploadInput.files[0];
+            selectedCharacterId = null;
+            selectedStaticPath = null;
+
+            tokenChoices.forEach(c => c.style.outline = "none");
+        }
+    });
+}
+
+
+const createTokenBtn = document.getElementById("create-token-btn");
+
+if (createTokenBtn) {
+    createTokenBtn.addEventListener("click", () => {
+
+        if (!selectedType) {
+            alert("Selecciona un tipo de token.");
+            return;
+        }
+
+        const manualName = document.getElementById("manual-token-name").value.trim();
+        const size = parseInt(document.getElementById("token-size").value);
+
+        const formData = new FormData();
+        formData.append("type", selectedType);
+        formData.append("x", 200);
+        formData.append("y", 200);
+        formData.append("label", manualName);
+        formData.append("size", `${size}`);
+
+        if (selectedType === "character") {
+            formData.append("character_id", selectedCharacterId);
+        }
+
+        if (selectedType === "static") {
+            formData.append("static_path", selectedStaticPath);
+        }
+
+        if (selectedType === "upload") {
+            formData.append("upload", selectedUploadFile);
+        }
+
+        fetch(`/boards/${boardId}/add_token/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCSRFToken() },
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.token) return;
+
+            tokens.push(data.token);
+            drawBoard();
+
+            ws.send(JSON.stringify({
+                type: "token_add",
+                token: data.token
+            }));
+
+            addTokenModal.classList.add("hidden");
+        });
+    });
+}
 
 
 

@@ -1,6 +1,7 @@
 from django import forms
 from .models import Campaign, Character
-
+from django.conf import settings
+import os
 
 class CampaignForm(forms.ModelForm):
     """
@@ -20,13 +21,17 @@ class CampaignForm(forms.ModelForm):
 
 class CharacterForm(forms.ModelForm):
     """
-    Model form para crear personajes
+    Modal para crear personajes
     """
+    image_static = forms.ChoiceField(required=False)
+
     class Meta:
         model = Character
         fields = [
             "name",
             "campaign",
+            "image_upload",
+            "image_static",
             "strength",
             "dexterity",
             "constitution",
@@ -37,6 +42,8 @@ class CharacterForm(forms.ModelForm):
         labels = {
             "name": "Nombre del personaje",
             "campaign": "Campaña (opcional)",
+            "image_upload": "Imagen subida",
+            "image_static": "Imagen estática",
             "strength": "Fuerza",
             "dexterity": "Destreza",
             "constitution": "Constitución",
@@ -47,6 +54,8 @@ class CharacterForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "campaign": forms.Select(attrs={"class": "form-control"}),
+            "image_upload": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "image_static": forms.Select(attrs={"class": "form-control"}),
             "strength": forms.NumberInput(attrs={"class": "form-control"}),
             "dexterity": forms.NumberInput(attrs={"class": "form-control"}),
             "constitution": forms.NumberInput(attrs={"class": "form-control"}),
@@ -54,6 +63,20 @@ class CharacterForm(forms.ModelForm):
             "wisdom": forms.NumberInput(attrs={"class": "form-control"}),
             "charisma": forms.NumberInput(attrs={"class": "form-control"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        tokens_path = os.path.join(settings.BASE_DIR, "static/assets/tokens")
+        files = sorted(f for f in os.listdir(tokens_path) if f.endswith(".png"))
+
+        choices = [("", "Ninguna")] + [
+            (f"assets/tokens/{f}", f) for f in files
+        ]
+
+        self.fields["image_static"].choices = choices
+
+
 
 class DeleteConfirmForm(forms.Form):
     """
