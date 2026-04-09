@@ -31,7 +31,7 @@ class CampaignAdmin(admin.ModelAdmin):
 @admin.register(Character)
 class CharacterAdmin(admin.ModelAdmin):
     """
-    Admin para personajes de DnD
+    Admin para personajes
     """
     list_display = ("name", "user", "campaign")
     search_fields = ("name", "user__display_name")
@@ -40,6 +40,9 @@ class CharacterAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Información del personaje", {
             "fields": ("name", "user", "campaign")
+        }),
+        ("Imagen", {
+            "fields": ("image_upload", "image_static")
         }),
         ("Estadísticas", {
             "fields": (
@@ -52,6 +55,7 @@ class CharacterAdmin(admin.ModelAdmin):
             )
         }),
     )
+
 
 
 
