@@ -1,3 +1,459 @@
-.modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
+/* PALETA PRINCIPAL */
+:root {
+    --stone-gray: #6b6b6b;      /* piedra desgastada */
+    --stone-dark: #3f3f3f;      /* piedra húmeda / sombra */
+    --moss-green: #2f4f2f;      /* musgo */
+    --moss-dark: #1e331e;       /* musgo profundo */
+    --text-main: #111;          /* texto principal */
+}
+
+/* COLORES BASE */
+.bg-stone {
+    background-color: var(--stone-gray) !important;
+}
+
+.bg-stone-dark {
+    background-color: var(--stone-dark) !important;
+}
+
+.text-moss {
+    color: var(--moss-green) !important;
+}
+
+.text-main {
+    color: var(--text-main) !important;
+}
+
+/* NAVBAR */
+.navbar {
+    border-bottom: 3px solid var(--moss-green);
+}
+
+.nav-link {
+    color: #ddd !important;
+}
+
+.nav-link:hover {
+    color: var(--moss-green) !important;
+}
+
+/* FOOTER */
+footer {
+    border-top: 2px solid var(--moss-green);
+}
+
+/* CONTENEDORES */
+.card {
+    background-color: var(--stone-dark);
+    color: #eee;
+    border: 1px solid var(--moss-green);
+}
+
+/* BOTONES */
+.btn-moss {
+    background-color: var(--moss-green);
+    color: white;
+    border: none;
+}
+
+.btn-moss:hover {
+    background-color: var(--moss-dark);
+}
+
+/* MODALES  */
+.modal {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.5);
+}
+
 .hidden { display:none; }
-.modal-content { background:white; padding:20px; width:300px; margin:100px auto; }
+
+.modal-content {
+    background:white;
+    padding:20px;
+    width:300px;
+    margin:100px auto;
+}
+
+/* HOME PAGE */
+.text-center h1 {
+    letter-spacing: 1px;
+}
+
+.lead {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* LISTA DE PERSONAJES */
+.card h5 {
+    color: #fff;
+}
+
+.card p {
+    color: #ddd;
+}
+
+.btn-warning {
+    color: #222 !important;
+}
+
+/* MINIATURAS DE PERSONAJES */
+.character-thumb {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* FORMULARIOS */
+.card input,
+.card select,
+.card textarea {
+    background-color: #2e2e2e;
+    color: #eee;
+    border: 1px solid var(--moss-green);
+}
+
+.card input:focus,
+.card select:focus,
+.card textarea:focus {
+    background-color: #3a3a3a;
+    border-color: var(--moss-green);
+    box-shadow: 0 0 5px var(--moss-green);
+    color: #fff;
+}
+
+.form-label {
+    color: var(--moss-green);
+}
+
+/* IMAGEN GRANDE DEL DETALLE */
+.character-detail-img {
+    width: 220px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid var(--moss-green);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ============================
+   BOARD LAYOUT
+============================ */
+
+.board-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+}
+
+
+.board-container {
+    width: 1000px;
+    height: 800px;
+    position: relative;
+    border: 1px solid #333;
+}
+
+
+#board-root {
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================
+   CONTROLES SUPERIORES
+============================ */
+
+.board-controls {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.dice-open-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.dice-open-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.map-selector {
+    padding: 6px;
+    background: #222;
+    color: #eee;
+    border: 1px solid var(--moss-green);
+}
+
+/* ============================
+   TOKEN MENU
+============================ */
+
+.token-menu {
+    position: absolute;
+    background: #222;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    z-index: 999;
+}
+
+.token-menu-delete {
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* ============================
+   CHAT
+============================ */
+
+.board-chat {
+    width: 320px;
+    height: 800px;
+    border: 1px solid #333;
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 8px;
+    border-bottom: 1px solid #444;
+    background: #111;
+    color: #eee;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 8px;
+    overflow-y: auto;
+    background: #1a1a1a;
+    color: #eee;
+    font-size: 14px;
+}
+
+.chat-input-area {
+    padding: 8px;
+    border-top: 1px solid #444;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-input {
+    resize: none;
+    width: 100%;
+    background: #222;
+    color: #eee;
+    border: 1px solid var(--moss-green);
+}
+
+/* ============================
+   DICE MODAL
+============================ */
+
+.dice-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.dice-modal-content {
+    background: #222;
+    color: #eee;
+    padding: 20px;
+    width: 320px;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+}
+
+.dice-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.dice-modal-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.dice-close-btn {
+    background: none;
+    border: none;
+    color: #eee;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.dice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dice-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dice-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.dice-icon {
+    width: 40px;
+    height: 40px;
+}
+
+.dice-count {
+    width: 60px;
+    padding: 4px;
+    font-size: 16px;
+}
+
+/* ============================
+   TOKEN MODAL
+============================ */
+
+.token-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.token-modal-content {
+    background: #222;
+    color: #eee;
+    width: 700px;
+    max-height: 90%;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.token-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.token-close-btn {
+    background: none;
+    border: none;
+    color: #eee;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* ============================
+   TOKEN GRID
+============================ */
+
+.token-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 80px);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.token-choice {
+    text-align: center;
+    cursor: pointer;
+}
+
+.token-choice-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.token-choice-placeholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #555;
+}
+
+.token-choice-name {
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.token-upload,
+.token-size,
+.token-manual-name {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 6px;
+    background: #222;
+    color: #eee;
+    border: 1px solid var(--moss-green);
+}
+
+/* ============================
+   UTILIDADES
+============================ */
+
+.hidden {
+    display: none;
+}
+
+/* ============================
+   RESPONSIVE PARA TABLETS
+   Activa en <= 1024px
+============================ */
+@media (max-width: 1024px) {
+
+    .board-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .board-container {
+        width: 90vw;   /* ocupa el ancho disponible */
+        height: 70vh;  /* mantiene proporción sin romper */
+    }
+
+    .board-chat {
+        width: 90vw;
+        height: 300px;
+        flex-shrink: 0;
+    }
+}

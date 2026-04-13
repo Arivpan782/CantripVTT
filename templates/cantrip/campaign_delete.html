@@ -3,16 +3,47 @@
 {% block title %}Borrar campaña{% endblock %}
 
 {% block content %}
-<h1>Borrar campaña: {{ campaign.name }}</h1>
+<div class="container" style="max-width: 600px;">
 
-<p>Esta acción no se puede deshacer.</p>
-<p>Para confirmar, escribe <strong>DELETE</strong>:</p>
+    <div class="card p-4 shadow-sm bg-stone-dark text-main">
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" style="color: red;">Borrar campaña</button>
-</form>
+        <h1 class="text-center text-moss fw-bold mb-4">
+            Borrar campaña: {{ campaign.name }}
+        </h1>
 
-<a href="{% url 'campaign_detail' campaign.pk %}">Cancelar</a>
+        <p class="text-center mb-3">
+            Esta acción <strong class="text-danger">no se puede deshacer</strong>.
+        </p>
+
+        <p class="text-center mb-4">
+            Para confirmar, escribe <strong class="text-moss">DELETE</strong>:
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label text-moss fw-bold">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-danger w-100 mt-3">
+                Borrar campaña
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'campaign_detail' campaign.pk %}" class="text-moss fw-bold">
+                Cancelar
+            </a>
+        </div>
+
+    </div>
+
+</div>
 {% endblock %}

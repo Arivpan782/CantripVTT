@@ -4,130 +4,24 @@
 
 {% block title %}Tablero - {{ board.campaign.name }}{% endblock %}
 
-{% block extra_css %}
-<style>
-#board-root {
-    overflow: auto;
-}
-
-
-.dice-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.55);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-
-
-.token-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 3000;
-}
-
-
-
-.dice-modal-content {
-    background: #222;
-    color: #eee;
-    padding: 20px;
-    width: 320px;
-    border-radius: 8px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.6);
-}
-
-.dice-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.dice-modal-title {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.dice-close-btn {
-    background: none;
-    border: none;
-    color: #eee;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.dice-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.dice-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.dice-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.dice-icon {
-    width: 40px;
-    height: 40px;
-}
-
-.dice-count {
-    width: 60px;
-    padding: 4px;
-    font-size: 16px;
-}
-
-.hidden {
-    display: none;
-}
-
-.token-modal.hidden {
-    display: none;
-}
-
-</style>
-{% endblock %}
-
 {% block content %}
-<h1>Tablero de {{ board.campaign.name }}</h1>
+<h1 class="text-moss fw-bold mb-3">Tablero de {{ board.campaign.name }}</h1>
 
-<p>Rol: {{ role }}</p>
+<p class="mb-3">Rol: {{ role }}</p>
 
-<div style="margin-bottom: 10px;">
+<div class="board-controls">
 
     {% if role == "DM" %}
-        <button id="add-token-btn">Añadir token</button>
-        <button id="clear-tokens-btn">Limpiar tokens</button>
+        <button id="add-token-btn" class="btn btn-moss btn-sm">Añadir token</button>
+        <button id="clear-tokens-btn" class="btn btn-danger btn-sm">Limpiar tokens</button>
     {% endif %}
 
-    <button id="open-dice-btn">
-        <img src="{% static 'assets/dice/d20.png' %}" style="width:32px;height:32px;">
+    <button id="open-dice-btn" class="dice-open-btn">
+        <img src="{% static 'assets/dice/d20.png' %}" class="dice-open-icon">
     </button>
 
     {% if role == "DM" %}
-        <select id="map-selector">
+        <select id="map-selector" class="map-selector">
             <option value="">-- Seleccionar mapa de assets --</option>
             {% for map in static_maps %}
                 <option value="{{ map }}">{{ map|basename }}</option>
@@ -136,44 +30,41 @@
     {% endif %}
 </div>
 
-<div style="display: flex; gap: 16px; align-items: flex-start;">
+<div class="board-layout">
 
-    <div id="board-container"
-         style="width: 1200px; height: 800px; position: relative; border: 1px solid #333;">
+    <div id="board-container" class="board-container">
         <div id="board-root"
              data-board-id="{{ board.id }}"
              data-role="{{ role }}"
              data-background="{% if board.background_image %}{{ board.background_image.url }}{% elif board.background_static %}{% static board.background_static %}{% endif %}">
+            <script id="tokens-data" type="application/json">
+                {{ board.tokens|safe }}
+            </script>
+
         </div>
     </div>
 
-    <div id="token-menu" class="hidden"
-        style="position:absolute; background:#222; color:white; padding:8px; border-radius:4px; z-index:999;">
-        <div id="delete-token-btn" style="cursor:pointer; padding:4px;">Eliminar token</div>
+    <div id="token-menu" class="token-menu hidden">
+        <div id="delete-token-btn" class="token-menu-delete">Eliminar token</div>
     </div>
 
+    <div id="board-chat" class="board-chat">
 
-    <div id="board-chat"
-         style="width: 320px; height: 800px; border: 1px solid #333; display: flex; flex-direction: column;">
-
-        <div style="padding: 8px; border-bottom: 1px solid #444; background: #111; color: #eee;">
+        <div class="chat-header">
             <strong>Chat de la mesa</strong>
         </div>
 
-        <div id="chat-messages"
-             style="flex: 1; padding: 8px; overflow-y: auto; background: #1a1a1a; color: #eee; font-size: 14px;">
-        </div>
+        <div id="chat-messages" class="chat-messages"></div>
 
-        <div style="padding: 8px; border-top: 1px solid #444; background: #111; display: flex; flex-direction: column; gap: 4px;">
-            <textarea id="chat-input"
-                      rows="3"
-                      style="resize: none; width: 100%;"></textarea>
-            <button id="chat-send-btn">Enviar</button>
+        <div class="chat-input-area">
+            <textarea id="chat-input" rows="3" class="chat-input"></textarea>
+            <button id="chat-send-btn" class="btn btn-moss btn-sm">Enviar</button>
         </div>
     </div>
 
 </div>
 
+<!-- MODAL DE DADOS -->
 <div id="dice-modal" class="dice-modal hidden">
     <div class="dice-modal-content">
 
@@ -233,82 +124,61 @@
                 <input type="number" class="dice-count" data-sides="100" value="1" min="1">
             </div>
 
-        </div>
-    </div>
-</div>
 
+                    </div>
+                </div>
+            </div>
+
+<!-- MODAL DE TOKENS -->
 <div id="add-token-modal" class="token-modal hidden">
 
-    <div style="background:#222; color:#eee; width:700px; max-height:90%;
-                overflow-y:auto; border-radius:8px; padding:20px;">
+    <div class="token-modal-content">
 
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="token-modal-header">
             <h2>Añadir token</h2>
-            <button id="close-add-token"
-                    style="background:none; border:none; color:#eee; font-size:20px; cursor:pointer;">
-                ✕
-            </button>
+            <button id="close-add-token" class="token-close-btn">✕</button>
         </div>
 
         <h3>Personajes de la campaña</h3>
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, 80px);
-                    gap:12px; margin-bottom:20px;">
+        <div class="token-grid">
 
             {% for c in characters %}
-                <div class="token-choice" data-type="character" data-id="{{ c.id }}"
-                     style="text-align:center; cursor:pointer;">
-
+                <div class="token-choice" data-type="character" data-id="{{ c.id }}">
                     {% if c.get_image %}
-                        <img src="{{ c.get_image }}"
-                             style="width:70px; height:70px; border-radius:50%; object-fit:cover;">
+                        <img src="{{ c.get_image }}" class="token-choice-img">
                     {% else %}
-                        <div style="width:70px; height:70px; border-radius:50%;
-                                    background:#555;"></div>
+                        <div class="token-choice-placeholder"></div>
                     {% endif %}
-
-                    <div style="font-size:12px; margin-top:4px;">{{ c.name }}</div>
+                    <div class="token-choice-name">{{ c.name }}</div>
                 </div>
             {% endfor %}
         </div>
 
         <h3>Tokens estáticos</h3>
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, 80px);
-                    gap:12px; margin-bottom:20px;">
-
+        <div class="token-grid">
             {% for t in static_tokens %}
-                <div class="token-choice" data-type="static" data-path="{{ t.path }}"
-                     style="text-align:center; cursor:pointer;">
-
-                    <img src="{% static t.path %}"
-                         style="width:70px; height:70px; border-radius:50%; object-fit:cover;">
-
-                    <div style="font-size:12px; margin-top:4px;">{{ t.name }}</div>
+                <div class="token-choice" data-type="static" data-path="{{ t.path }}">
+                    <img src="{% static t.path %}" class="token-choice-img">
+                    <div class="token-choice-name">{{ t.name }}</div>
                 </div>
             {% endfor %}
         </div>
 
         <h3>Subir imagen propia</h3>
-        <input type="file" id="token-upload" accept="image/*"
-               style="margin-bottom:20px;">
+        <input type="file" id="token-upload" accept="image/*" class="token-upload">
 
         <h3>Tamaño del token</h3>
-        <input id="token-size" type="number" value="60" min="10" max="300"
-               style="width:100%; margin-bottom:20px; padding:6px;">
-
+        <input id="token-size" type="number" value="60" min="10" max="300" class="token-size">
 
         <h3>Crear token manual</h3>
-        <input id="manual-token-name" type="text" placeholder="Nombre del token"
-               style="width:100%; margin-bottom:10px; padding:6px;">
+        <input id="manual-token-name" type="text" placeholder="Nombre del token" class="token-manual-name">
 
-        <button id="create-token-btn"
-                style="width:100%; padding:10px; background:#444; color:#eee;
-                       border:none; cursor:pointer; border-radius:4px;">
+        <button id="create-token-btn" class="btn btn-moss w-100 mt-3">
             Crear token
         </button>
 
     </div>
 </div>
-
 
 {% endblock %}
 
@@ -316,6 +186,5 @@
 <script>
     const username = "{{ request.user.username }}";
 </script>
-
 <script src="{% static 'cantrip/js/board.js' %}"></script>
 {% endblock %}

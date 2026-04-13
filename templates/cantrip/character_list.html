@@ -3,33 +3,56 @@
 {% block title %}Mis personajes{% endblock %}
 
 {% block content %}
-<h1>Mis personajes</h1>
+<div class="container">
 
-{% if characters %}
-    <ul>
-        {% for character in characters %}
-            <li>
-                <strong>{{ character.name }}</strong>
+    <h1 class="text-moss fw-bold mb-4">Mis personajes</h1>
 
-                {% if character.campaign %}
-                    — en campaña: {{ character.campaign.name }}
-                {% else %}
-                    — <em>sin campaña</em>
-                {% endif %}
+    {% if characters %}
+        <div class="row g-4">
+            {% for character in characters %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card p-3 h-100">
 
-                <a href="{% url 'character_detail' character.pk %}" style="margin-left: 10px;">
-                    Ver detalles
-                </a>
+                        {% if character.get_image %}
+                            <img src="{{ character.get_image }}"
+                                 alt="{{ character.name }}"
+                                 class="img-fluid rounded mb-3 character-thumb">
+                        {% endif %}
 
-                <a href="{% url 'character_edit' character.pk %}" style="margin-left: 10px; color: orange;">
-                    Editar
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No tienes personajes todavía.</p>
-{% endif %}
+                        <h5 class="fw-bold">{{ character.name }}</h5>
 
-<a href="{% url 'character_create' %}">Crear personaje</a>
+                        {% if character.campaign %}
+                            <p class="mb-1">
+                                <span class="text-moss">En campaña:</span> {{ character.campaign.name }}
+                            </p>
+                        {% else %}
+                            <p class="mb-1 text-muted"><em>Sin campaña</em></p>
+                        {% endif %}
+
+                        <div class="mt-auto pt-2">
+                            <a href="{% url 'character_detail' character.pk %}" class="btn btn-sm btn-moss me-2">
+                                Ver detalles
+                            </a>
+
+                            <a href="{% url 'character_edit' character.pk %}" class="btn btn-sm btn-warning">
+                                Editar
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p class="text-muted">No tienes personajes todavía.</p>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'character_create' %}" class="btn btn-moss">
+            Crear personaje
+        </a>
+    </div>
+
+</div>
 {% endblock %}

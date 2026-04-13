@@ -3,30 +3,47 @@
 {% block title %}{{ character.name }}{% endblock %}
 
 {% block content %}
-<h1>{{ character.name }}</h1>
+<div class="container" style="max-width: 700px;">
 
-<p><strong>Campaña:</strong>
-    {% if character.campaign %}
-        {{ character.campaign.name }}
-    {% else %}
-        <em>Sin campaña</em>
-    {% endif %}
-</p>
+    <div class="card p-4 shadow-sm bg-stone-dark text-main">
 
-<h3>Atributos</h3>
-<ul>
-    <li>Fuerza: {{ character.strength }}</li>
-    <li>Destreza: {{ character.dexterity }}</li>
-    <li>Constitución: {{ character.constitution }}</li>
-    <li>Inteligencia: {{ character.intelligence }}</li>
-    <li>Sabiduría: {{ character.wisdom }}</li>
-    <li>Carisma: {{ character.charisma }}</li>
-</ul>
+        <div class="text-center mb-4">
+            {% if character.get_image %}
+                <img src="{{ character.get_image }}"
+                     alt="{{ character.name }}"
+                     class="character-detail-img">
+            {% endif %}
+        </div>
 
-<a href="{% url 'character_list' %}">Volver</a>
-<a href="{% url 'character_edit' character.pk %}">Editar personaje</a>
-<a href="{% url 'character_delete' character.pk %}" style="color: red;">
-    Borrar personaje
-</a>
+        <h1 class="text-moss fw-bold text-center mb-4">{{ character.name }}</h1>
 
+        <p class="text-center mb-4">
+            <strong class="text-moss">Campaña:</strong>
+            {% if character.campaign %}
+                {{ character.campaign.name }}
+            {% else %}
+                <em class="text-muted">Sin campaña</em>
+            {% endif %}
+        </p>
+
+        <h3 class="text-moss fw-bold mb-3">Atributos</h3>
+
+        <ul class="list-group mb-4">
+            <li class="list-group-item bg-stone text-main">Fuerza: {{ character.strength }}</li>
+            <li class="list-group-item bg-stone text-main">Destreza: {{ character.dexterity }}</li>
+            <li class="list-group-item bg-stone text-main">Constitución: {{ character.constitution }}</li>
+            <li class="list-group-item bg-stone text-main">Inteligencia: {{ character.intelligence }}</li>
+            <li class="list-group-item bg-stone text-main">Sabiduría: {{ character.wisdom }}</li>
+            <li class="list-group-item bg-stone text-main">Carisma: {{ character.charisma }}</li>
+        </ul>
+
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'character_list' %}" class="btn btn-secondary">Volver</a>
+            <a href="{% url 'character_edit' character.pk %}" class="btn btn-moss">Editar</a>
+            <a href="{% url 'character_delete' character.pk %}" class="btn btn-danger">Borrar</a>
+        </div>
+
+    </div>
+
+</div>
 {% endblock %}

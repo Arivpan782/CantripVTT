@@ -3,33 +3,44 @@
 {% block title %}Mis Campañas{% endblock %}
 
 {% block content %}
-<h1>Mis Campañas</h1>
+<div class="container">
 
-{% if campaigns %}
-    <ul>
-        {% for campaign in campaigns %}
-            <li>
-                <strong>{{ campaign.name }}</strong>
+    <h1 class="text-moss fw-bold mb-4">Mis Campañas</h1>
 
-                {% if campaign.dungeon_master == user %}
-                    <span style="color: red; font-weight: bold;">[DM]</span>
-                {% else %}
-                    <span style="color: green; font-weight: bold;">[Jugador]</span>
-                {% endif %}
+    {% if campaigns %}
+        <div class="row g-4">
+            {% for campaign in campaigns %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card p-3 h-100 bg-stone-dark text-main shadow-sm">
 
-                <a href="{% url 'campaign_detail' campaign.pk %}" style="margin-left: 10px;">
-                    Ver detalles
-                </a>
+                        <h4 class="fw-bold text-moss mb-2">{{ campaign.name }}</h4>
 
-                {% if campaign.dungeon_master == user %}
-                    <a href="{% url 'campaign_edit' campaign.pk %}" style="margin-left: 10px; color: orange;">
-                        Editar
-                    </a>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No estás en ninguna campaña todavía.</p>
-{% endif %}
+                        {% if campaign.dungeon_master == user %}
+                            <span class="badge bg-danger mb-3">DM</span>
+                        {% else %}
+                            <span class="badge bg-success mb-3">Jugador</span>
+                        {% endif %}
+
+                        <div class="mt-auto">
+                            <a href="{% url 'campaign_detail' campaign.pk %}" class="btn btn-moss btn-sm w-100 mb-2">
+                                Ver detalles
+                            </a>
+
+                            {% if campaign.dungeon_master == user %}
+                                <a href="{% url 'campaign_edit' campaign.pk %}" class="btn btn-warning btn-sm w-100">
+                                    Editar
+                                </a>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p class="text-muted">No estás en ninguna campaña todavía.</p>
+    {% endif %}
+
+</div>
 {% endblock %}

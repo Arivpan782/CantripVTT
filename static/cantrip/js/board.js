@@ -644,6 +644,3 @@ if (createTokenBtn) {
         });
     });
 }
-
-
-

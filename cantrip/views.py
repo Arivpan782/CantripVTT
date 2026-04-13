@@ -550,4 +550,3 @@ class RollDiceView(LoginRequiredMixin, View):
         )
 
         return JsonResponse({"status": "ok"})
-
