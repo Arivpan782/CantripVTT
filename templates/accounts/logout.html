@@ -3,13 +3,32 @@
 {% block title %}Logout{% endblock %}
 
 {% block content %}
-    <h2>Estás seguro de cerrar sesion?</h2>
+<div class="container" style="max-width: 500px;">
+
+    <div class="card p-4 shadow-sm bg-stone-dark text-main">
+
+        <h2 class="text-center text-moss fw-bold mb-4">
+            ¿Cerrar sesión?
+        </h2>
+
+        <p class="text-center mb-4">
+            Confirma si deseas salir de tu cuenta.
+        </p>
+
         <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <button type="submit" class="btn btn-primary">Logout</button>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger w-100">
+                Logout
+            </button>
         </form>
-    <a href="" class="btn btn-secondary ms-2">Cancelar</a>
 
+        <div class="text-center mt-4">
+            <a href="{% url 'home' %}" class="text-moss fw-bold">
+                Cancelar
+            </a>
+        </div>
+
+    </div>
+
+</div>
 {% endblock %}

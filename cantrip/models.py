@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-
 class Campaign(models.Model):
     """
     Modelo Campaign con nombre, fecha automatica, DM y jugadores

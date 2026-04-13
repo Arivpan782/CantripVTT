@@ -3,65 +3,82 @@
 {% block title %}{{ campaign.name }}{% endblock %}
 
 {% block content %}
-<h1>{{ campaign.name }}</h1>
+<div class="container" style="max-width: 800px;">
 
-<p><strong>Dungeon Master:</strong> {{ campaign.dungeon_master.display_name }}</p>
+    <div class="card p-4 shadow-sm bg-stone-dark text-main">
 
-<p><strong>Tu rol en esta campaña:</strong>
-    {% if role == "DM" %}
-        <span style="color: red; font-weight: bold;">Dungeon Master</span>
-    {% elif role == "Jugador" %}
-        <span style="color: green; font-weight: bold;">Jugador</span>
-    {% else %}
-        <span style="color: gray;">No perteneces a esta campaña</span>
-    {% endif %}
-</p>
+        <h1 class="text-moss fw-bold text-center mb-4">{{ campaign.name }}</h1>
 
-<h3>Jugadores</h3>
-<ul>
-    {% for player in campaign.players.all %}
-        <li>{{ player.display_name }}</li>
-    {% empty %}
-        <li>No hay jugadores todavía.</li>
-    {% endfor %}
-</ul>
+        <p class="mb-3">
+            <strong class="text-moss">Dungeon Master:</strong>
+            {{ campaign.dungeon_master.display_name }}
+        </p>
 
-<h3>Personajes en esta campaña</h3>
+        <p class="mb-4">
+            <strong class="text-moss">Tu rol en esta campaña:</strong>
+            {% if role == "DM" %}
+                <span class="badge bg-danger">Dungeon Master</span>
+            {% elif role == "Jugador" %}
+                <span class="badge bg-success">Jugador</span>
+            {% else %}
+                <span class="badge bg-secondary">No perteneces a esta campaña</span>
+            {% endif %}
+        </p>
 
-<ul>
-    {% for character in characters %}
-        <li>
-            <strong>{{ character.name }}</strong>
-            — jugador: {{ character.user.display_name }}
-        </li>
-    {% empty %}
-        <li>No hay personajes en esta campaña todavía.</li>
-    {% endfor %}
-</ul>
+        <h3 class="text-moss fw-bold mb-3">Jugadores</h3>
+        <ul class="list-group mb-4">
+            {% for player in campaign.players.all %}
+                <li class="list-group-item bg-stone text-main">
+                    {{ player.display_name }}
+                </li>
+            {% empty %}
+                <li class="list-group-item bg-stone text-main">
+                    No hay jugadores todavía.
+                </li>
+            {% endfor %}
+        </ul>
 
-{% if user == campaign.dungeon_master %}
-    <a href="{% url 'open_board' campaign.id %}">
-        <button>Abrir tablero virtual</button>
-    </a>
-{% endif %}
+        <h3 class="text-moss fw-bold mb-3">Personajes en esta campaña</h3>
+        <ul class="list-group mb-4">
+            {% for character in characters %}
+                <li class="list-group-item bg-stone text-main">
+                    <strong>{{ character.name }}</strong>
+                    — jugador: {{ character.user.display_name }}
+                </li>
+            {% empty %}
+                <li class="list-group-item bg-stone text-main">
+                    No hay personajes en esta campaña todavía.
+                </li>
+            {% endfor %}
+        </ul>
 
-{% if user != campaign.dungeon_master %}
-    {% if campaign.board %}
-        <a href="{% url 'join_board' campaign.id %}">
-            <button>Entrar al tablero</button>
-        </a>
-    {% else %}
-        <p>El tablero aún no está disponible.</p>
-    {% endif %}
-{% endif %}
+        {% if user == campaign.dungeon_master %}
+            <a href="{% url 'open_board' campaign.id %}" class="btn btn-moss w-100 mb-3">
+                Abrir tablero virtual
+            </a>
+        {% else %}
+            {% if campaign.board %}
+                <a href="{% url 'join_board' campaign.id %}" class="btn btn-moss w-100 mb-3">
+                    Entrar al tablero
+                </a>
+            {% else %}
+                <p class="text-center text-muted mb-3">El tablero aún no está disponible.</p>
+            {% endif %}
+        {% endif %}
 
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'campaign_list' %}" class="btn btn-secondary">
+                Volver a mis campañas
+            </a>
 
-{% if role == "DM" %}
-    <a href="{% url 'campaign_delete' campaign.pk %}" style="color: red;">
-        Borrar campaña
-    </a>
-{% endif %}
+            {% if role == "DM" %}
+                <a href="{% url 'campaign_delete' campaign.pk %}" class="btn btn-danger">
+                    Borrar campaña
+                </a>
+            {% endif %}
+        </div>
 
+    </div>
 
-<a href="{% url 'campaign_list' %}">Volver a mis campañas</a>
+</div>
 {% endblock %}

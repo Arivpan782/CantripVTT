@@ -3,14 +3,38 @@
 {% block title %}Editar campaña{% endblock %}
 
 {% block content %}
-<h1>Editar campaña: {{ campaign.name }}</h1>
+<div class="container" style="max-width: 600px;">
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+    <h1 class="text-moss fw-bold mb-4 text-center">
+        Editar campaña: {{ campaign.name }}
+    </h1>
 
-    <button type="submit">Guardar cambios</button>
-</form>
+    <form method="post" class="card p-4 shadow-sm bg-stone-dark text-main">
+        {% csrf_token %}
 
-<a href="{% url 'campaign_detail' campaign.pk %}">Volver a detalles</a>
+        {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label text-moss fw-bold">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="form-text text-muted">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-moss w-100 mt-3">
+            Guardar cambios
+        </button>
+    </form>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'campaign_detail' campaign.pk %}" class="text-moss fw-bold">
+            Volver a detalles
+        </a>
+    </div>
+
+</div>
 {% endblock %}
