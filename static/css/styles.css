@@ -1,66 +1,40 @@
-/* PALETA PRINCIPAL */
 :root {
-    --stone-gray: #6b6b6b;      /* piedra desgastada */
-    --stone-dark: #3f3f3f;      /* piedra húmeda / sombra */
-    --moss-green: #2f4f2f;      /* musgo */
-    --moss-dark: #1e331e;       /* musgo profundo */
-    --text-main: #111;          /* texto principal */
+    --bg-main: #222831;
+    --bg-elevated: #2f3640;
+    --border-subtle: #414b57;
+    --accent: #3fbf7f;
+    --accent-strong: #2f9f66;
+    --text-main: #f5f7fa;
+    --text-muted: #c0c4cc;
+    --danger: #b84a4a ;
 }
 
-/* COLORES BASE */
-.bg-stone {
-    background-color: var(--stone-gray) !important;
-}
+.bg-stone { background-color: var(--bg-elevated) !important; }
+.bg-stone-dark { background-color: var(--bg-main) !important; }
+.text-moss { color: var(--accent) !important; }
+.text-main { color: var(--text-main) !important; }
 
-.bg-stone-dark {
-    background-color: var(--stone-dark) !important;
-}
+.navbar { border-bottom: 3px solid var(--accent); background: var(--bg-main); }
+.nav-link { color: var(--text-muted) !important; }
+.nav-link:hover { color: var(--accent) !important; }
 
-.text-moss {
-    color: var(--moss-green) !important;
-}
+footer { border-top: 2px solid var(--accent); background: var(--bg-main); }
 
-.text-main {
-    color: var(--text-main) !important;
-}
-
-/* NAVBAR */
-.navbar {
-    border-bottom: 3px solid var(--moss-green);
-}
-
-.nav-link {
-    color: #ddd !important;
-}
-
-.nav-link:hover {
-    color: var(--moss-green) !important;
-}
-
-/* FOOTER */
-footer {
-    border-top: 2px solid var(--moss-green);
-}
-
-/* CONTENEDORES */
 .card {
-    background-color: var(--stone-dark);
-    color: #eee;
-    border: 1px solid var(--moss-green);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    border: 1px solid var(--accent);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
 }
 
-/* BOTONES */
 .btn-moss {
-    background-color: var(--moss-green);
-    color: white;
+    background-color: var(--accent);
+    color: #1a1f24;
     border: none;
 }
 
-.btn-moss:hover {
-    background-color: var(--moss-dark);
-}
+.btn-moss:hover { background-color: var(--accent-strong); }
 
-/* MODALES  */
 .modal {
     position: fixed;
     top:0; left:0;
@@ -71,37 +45,20 @@ footer {
 .hidden { display:none; }
 
 .modal-content {
-    background:white;
+    background: var(--bg-elevated);
     padding:20px;
     width:300px;
     margin:100px auto;
+    color: var(--text-main);
 }
 
-/* HOME PAGE */
-.text-center h1 {
-    letter-spacing: 1px;
-}
+.text-center h1 { letter-spacing: 1px; }
+.lead { max-width: 600px; margin-left: auto; margin-right: auto; }
 
-.lead {
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
+.card h5 { color: var(--text-main); }
+.card p { color: var(--text-muted); }
+.btn-warning { color: #222 !important; }
 
-/* LISTA DE PERSONAJES */
-.card h5 {
-    color: #fff;
-}
-
-.card p {
-    color: #ddd;
-}
-
-.btn-warning {
-    color: #222 !important;
-}
-
-/* MINIATURAS DE PERSONAJES */
 .character-thumb {
     width: 150px;
     height: 150px;
@@ -112,43 +69,35 @@ footer {
     margin-right: auto;
 }
 
-/* FORMULARIOS */
 .card input,
 .card select,
 .card textarea {
-    background-color: #2e2e2e;
-    color: #eee;
-    border: 1px solid var(--moss-green);
+    background-color: #3a414d;
+    color: var(--text-main);
+    border: 1px solid var(--accent);
 }
 
 .card input:focus,
 .card select:focus,
 .card textarea:focus {
-    background-color: #3a3a3a;
-    border-color: var(--moss-green);
-    box-shadow: 0 0 5px var(--moss-green);
-    color: #fff;
+    background-color: #4a5260;
+    border-color: var(--accent);
+    box-shadow: 0 0 5px var(--accent);
+    color: var(--text-main);
 }
 
-.form-label {
-    color: var(--moss-green);
-}
+.form-label { color: var(--accent); }
 
-/* IMAGEN GRANDE DEL DETALLE */
 .character-detail-img {
     width: 220px;
     height: 220px;
     object-fit: cover;
     border-radius: 50%;
-    border: 4px solid var(--moss-green);
+    border: 4px solid var(--accent);
     display: block;
     margin-left: auto;
     margin-right: auto;
 }
-
-/* ============================
-   BOARD LAYOUT
-============================ */
 
 .board-layout {
     display: flex;
@@ -157,24 +106,19 @@ footer {
     flex-wrap: nowrap;
 }
 
-
 .board-container {
     width: 1000px;
     height: 800px;
     position: relative;
-    border: 1px solid #333;
+    border: 1px solid var(--border-subtle);
 }
-
 
 #board-root {
     overflow: auto;
     width: 100%;
     height: 100%;
+    background: var(--bg-main);
 }
-
-/* ============================
-   CONTROLES SUPERIORES
-============================ */
 
 .board-controls {
     margin-bottom: 10px;
@@ -196,62 +140,57 @@ footer {
 
 .map-selector {
     padding: 6px;
-    background: #222;
-    color: #eee;
-    border: 1px solid var(--moss-green);
+    background: var(--bg-elevated);
+    color: var(--text-main);
+    border: 1px solid var(--accent);
 }
-
-/* ============================
-   TOKEN MENU
-============================ */
 
 .token-menu {
     position: absolute;
-    background: #222;
-    color: white;
+    background: var(--bg-elevated);
+    color: var(--text-main);
     padding: 8px;
     border-radius: 4px;
     z-index: 999;
+    border: 1px solid var(--accent);
 }
 
 .token-menu-delete {
     cursor: pointer;
     padding: 4px;
+    color: var(--danger);
 }
-
-/* ============================
-   CHAT
-============================ */
 
 .board-chat {
     width: 320px;
     height: 800px;
-    border: 1px solid #333;
+    border: 1px solid var(--border-subtle);
     display: flex;
     flex-shrink: 0;
     flex-direction: column;
+    background: var(--bg-main);
 }
 
 .chat-header {
     padding: 8px;
-    border-bottom: 1px solid #444;
-    background: #111;
-    color: #eee;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-elevated);
+    color: var(--text-main);
 }
 
 .chat-messages {
     flex: 1;
     padding: 8px;
     overflow-y: auto;
-    background: #1a1a1a;
-    color: #eee;
+    background: var(--bg-main);
+    color: var(--text-main);
     font-size: 14px;
 }
 
 .chat-input-area {
     padding: 8px;
-    border-top: 1px solid #444;
-    background: #111;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-elevated);
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -260,14 +199,10 @@ footer {
 .chat-input {
     resize: none;
     width: 100%;
-    background: #222;
-    color: #eee;
-    border: 1px solid var(--moss-green);
+    background: #3a414d;
+    color: var(--text-main);
+    border: 1px solid var(--accent);
 }
-
-/* ============================
-   DICE MODAL
-============================ */
 
 .dice-modal {
     position: fixed;
@@ -283,8 +218,8 @@ footer {
 }
 
 .dice-modal-content {
-    background: #222;
-    color: #eee;
+    background: var(--bg-elevated);
+    color: var(--text-main);
     padding: 20px;
     width: 320px;
     border-radius: 8px;
@@ -306,7 +241,7 @@ footer {
 .dice-close-btn {
     background: none;
     border: none;
-    color: #eee;
+    color: var(--text-main);
     font-size: 18px;
     cursor: pointer;
 }
@@ -340,10 +275,6 @@ footer {
     font-size: 16px;
 }
 
-/* ============================
-   TOKEN MODAL
-============================ */
-
 .token-modal {
     position: fixed;
     top: 0;
@@ -358,8 +289,8 @@ footer {
 }
 
 .token-modal-content {
-    background: #222;
-    color: #eee;
+    background: var(--bg-elevated);
+    color: var(--text-main);
     width: 700px;
     max-height: 90%;
     overflow-y: auto;
@@ -376,14 +307,10 @@ footer {
 .token-close-btn {
     background: none;
     border: none;
-    color: #eee;
+    color: var(--text-main);
     font-size: 20px;
     cursor: pointer;
 }
-
-/* ============================
-   TOKEN GRID
-============================ */
 
 .token-grid {
     display: grid;
@@ -408,12 +335,13 @@ footer {
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    background: #555;
+    background: #55606d;
 }
 
 .token-choice-name {
     font-size: 12px;
     margin-top: 4px;
+    color: var(--text-muted);
 }
 
 .token-upload,
@@ -422,33 +350,89 @@ footer {
     width: 100%;
     margin-bottom: 20px;
     padding: 6px;
-    background: #222;
-    color: #eee;
-    border: 1px solid var(--moss-green);
+    background: #3a414d;
+    color: var(--text-main);
+    border: 1px solid var(--accent);
 }
 
-/* ============================
-   UTILIDADES
-============================ */
+.hidden { display: none; }
 
-.hidden {
-    display: none;
+.btn-primary {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #1a1f24 !important;
 }
 
-/* ============================
-   RESPONSIVE PARA TABLETS
-   Activa en <= 1024px
-============================ */
+.btn-primary:hover {
+    background-color: var(--accent-strong) !important;
+    border-color: var(--accent-strong) !important;
+}
+
+.btn-warning {
+    background-color: #d4a650 !important;
+    border-color: #d4a650 !important;
+    color: #1a1f24 !important;
+}
+
+.btn-warning:hover {
+    background-color: #b98c3f !important;
+    border-color: #b98c3f !important;
+}
+
+.btn-danger {
+    background-color: #b84a4a !important;
+    border-color: #b84a4a !important;
+    color: #f5f7fa !important;
+}
+
+.btn-danger:hover {
+    background-color: #9e3d3d !important;
+    border-color: #9e3d3d !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-main);
+    opacity: 0.7;
+}
+
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+    color: var(--text-main);
+}
+
+input::-ms-input-placeholder,
+textarea::-ms-input-placeholder {
+    color: var(--text-main);
+}
+
+form .form-control::placeholder {
+    color: var(--text-main);
+    opacity: 0.7;
+}
+
+form .form-control:-ms-input-placeholder {
+    color: var(--text-main);
+}
+
+form .form-control::-ms-input-placeholder {
+    color: var(--text-main);
+}
+
+.shadow-sm {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45) !important;
+}
+
+
 @media (max-width: 1024px) {
-
     .board-layout {
         flex-direction: column;
         align-items: center;
     }
 
     .board-container {
-        width: 90vw;   /* ocupa el ancho disponible */
-        height: 70vh;  /* mantiene proporción sin romper */
+        width: 90vw;
+        height: 70vh;
     }
 
     .board-chat {
