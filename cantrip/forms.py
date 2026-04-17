@@ -5,23 +5,26 @@ import os
 
 class CampaignForm(forms.ModelForm):
     """
-    Model form para crear campañas
+    Formulario para crear campañas
     """
     class Meta:
         model = Campaign
-        fields = ["name", "players"]
-        widgets = {
-            "players": forms.SelectMultiple(attrs={"class": "form-control"}),
-        }
+        fields = ["name"]
         labels = {
             "name": "Nombre de la campaña",
-            "players": "Jugadores (opcional)",
         }
+
+
+class AddPlayerForm(forms.Form):
+    """
+    Formulario para añadir jugadores a campaña
+    """
+    email = forms.EmailField(label="Email del jugador")
 
 
 class CharacterForm(forms.ModelForm):
     """
-    Modal para crear personajes
+    Formulario para crear personajes
     """
     image_static = forms.ChoiceField(required=False)
 
