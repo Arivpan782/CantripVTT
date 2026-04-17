@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
+from accounts.models import User
 from .models import Campaign, Character, Board, Token
-from .forms import CampaignForm, CharacterForm, DeleteConfirmForm
+from .forms import CampaignForm, CharacterForm, DeleteConfirmForm, AddPlayerForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse, HttpResponseForbidden
@@ -16,10 +17,41 @@ from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
 from django.core.files.base import ContentFile
 import base64
+from django.core.paginator import Paginator
 
+import os
+from django.conf import settings
+from django.views.generic import TemplateView
 
-def home(request):
-    return render(request, "cantrip/home.html")
+def chunk_list(items, size):
+    return [items[i:i + size] for i in range(0, len(items), size)]
+
+class HomeView(TemplateView):
+    """
+    Vista home
+    """
+    template_name = "cantrip/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        maps_path = os.path.join(settings.BASE_DIR, "static", "assets", "maps")
+        tokens_path = os.path.join(settings.BASE_DIR, "static", "assets", "tokens")
+
+        maps = []
+        tokens = []
+
+        if os.path.exists(maps_path):
+            maps = [f"assets/maps/{f}" for f in os.listdir(maps_path) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+
+        if os.path.exists(tokens_path):
+            tokens = [f"assets/tokens/{f}" for f in os.listdir(tokens_path) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+
+        context["maps_chunks"] = chunk_list(maps, 4)
+        context["tokens_chunks"] = chunk_list(tokens, 4)
+
+        return context
+
 
 
 class CampaignListView(LoginRequiredMixin, ListView):
@@ -60,9 +92,6 @@ class CampaignCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-from django.views.generic import DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Campaign
 
 
 class CampaignDetailView(LoginRequiredMixin, DetailView):
@@ -96,8 +125,34 @@ class CampaignDetailView(LoginRequiredMixin, DetailView):
             context["role"] = "Jugador"
 
         context["characters"] = campaign.characters.select_related("user")
+        context["add_player_form"] = AddPlayerForm()
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        campaign = self.object
+        form = AddPlayerForm(request.POST)
+
+        if request.user != campaign.dungeon_master:
+            raise PermissionDenied("Solo el DM puede añadir jugadores.")
+
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return self.render_to_response(self.get_context_data(error="No existe un usuario con ese email."))
+
+            if user == campaign.dungeon_master:
+                return self.render_to_response(self.get_context_data(error="El DM ya pertenece a la campaña."))
+
+            if user in campaign.players.all():
+                return self.render_to_response(self.get_context_data(error="Ese jugador ya está en la campaña."))
+
+            campaign.players.add(user)
+
+        return redirect("campaign_detail", pk=campaign.pk)
 
 
 class CampaignUpdateView(LoginRequiredMixin, UpdateView):
@@ -465,9 +520,13 @@ def delete_token(request, token_id):
     if request.user != board.campaign.dungeon_master:
         return HttpResponseForbidden("Solo el DM puede borrar tokens.")
 
+    if token.image and token.image.name:
+        token.image.delete(save=False)
+
     token.delete()
 
     return JsonResponse({"status": "ok"})
+
 
 
 
@@ -480,9 +539,14 @@ class ClearTokensView(LoginRequiredMixin, View):
         if request.user != campaign.dungeon_master:
             raise PermissionDenied()
 
+        for token in board.tokens.all():
+            if token.image and token.image.name:
+                token.image.delete(save=False)
+
         board.tokens.all().delete()
 
         return JsonResponse({"status": "ok"})
+
 
 
 

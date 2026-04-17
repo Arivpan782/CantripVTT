@@ -1,12 +1,106 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="display-4 text-moss fw-bold">Bienvenido a Cantrip</h1>
-    <p class="lead mt-3 text-main">
-        Blablabla
-    </p>
+
+<div class="container py-5">
+
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card p-3 shadow-sm bg-stone-dark text-main">
+                <h3 class="text-moss fw-bold mb-3">¡Empieza tu aventura!</h3>
+                <img src="{% static 'assets/misc/mapa.jpg' %}"
+                     class="img-fluid mb-3"
+                     style="height: 300px; object-fit: cover; width: 100%;">
+                <a href="{% url 'campaign_create' %}" class="btn btn-moss w-100">Crear campaña</a>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card p-3 shadow-sm bg-stone-dark text-main">
+                <h3 class="text-moss fw-bold mb-3">¡Da vida a tu personaje!</h3>
+                <img src="{% static 'assets/misc/personajes.jpg' %}"
+                     class="img-fluid mb-3"
+                     style="height: 300px; object-fit: cover; width: 100%;">
+                <a href="{% url 'character_create' %}" class="btn btn-moss w-100">Crear personaje</a>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="text-moss fw-bold mb-3">Echa un vistazo nuestros mapas</h2>
+
+    <div id="mapsCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for chunk in maps_chunks %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <div class="row">
+                        {% for img in chunk %}
+                            <div class="col-md-3 mb-4">
+                                <div class="card bg-stone-dark p-2">
+                                    <img src="{% static img %}" class="img-fluid" style="height: 180px; object-fit: cover;">
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if maps_chunks|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#mapsCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mapsCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        {% endif %}
+    </div>
+
+    <h2 class="text-moss fw-bold mb-3">Echa un vistazo a nuestros personajes</h2>
+
+    <div id="tokensCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for chunk in tokens_chunks %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <div class="row">
+                        {% for img in chunk %}
+                            <div class="col-md-3 mb-4 d-flex justify-content-center">
+                                <img src="{% static img %}"
+                                     class="img-fluid"
+                                     style="height: 180px; width: 180px; object-fit: cover; border-radius: 50%;">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if tokens_chunks|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#tokensCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#tokensCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        {% endif %}
+    </div>
+
+    <div class="card bg-stone-dark text-main p-4 shadow-sm mt-5">
+        <h2 class="text-moss fw-bold mb-3 text-center">Sobre Cantrip</h2>
+        <p class="lead text-center">
+            CantripVTT es una virtual tabletop simple y centrada para jugar a juegos de rol,
+            pudiendo usar mapas y tokens de uso gratis o incluso importando imágenes propias.
+            Aquí podrás crear campañas, personajes e invitar a tus jugadores a una VTT en la que
+            podrás jugar de manera ágil y sin opciones extras que distraigan la partida.
+        </p>
+    </div>
+
 </div>
+
 {% endblock %}
