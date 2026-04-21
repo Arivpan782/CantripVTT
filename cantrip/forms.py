@@ -76,9 +76,11 @@ class CharacterForm(forms.ModelForm):
         choices = [("", "Ninguna")] + [
             (f"assets/tokens/{f}", f) for f in files
         ]
-
         self.fields["image_static"].choices = choices
 
+        image_static_widget = self.fields["image_static"].widget
+        existing_classes = image_static_widget.attrs.get("class", "")
+        image_static_widget.attrs["class"] = (existing_classes + " select-readonly").strip()
 
 
 class DeleteConfirmForm(forms.Form):

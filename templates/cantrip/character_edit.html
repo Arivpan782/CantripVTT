@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Editar {{ character.name }}{% endblock %}
 
@@ -15,7 +16,15 @@
         {% for field in form %}
             <div class="mb-3">
                 <label class="form-label text-moss fw-bold">{{ field.label }}</label>
+
                 {{ field }}
+
+                {% if field.name == "image_static" %}
+                    <button type="button" id="open-static-token-modal" class="btn btn-secondary w-100 mt-2">
+                        Elegir imagen de nuestra galería
+                    </button>
+                {% endif %}
+
                 {% if field.help_text %}
                     <div class="form-text text-muted">{{ field.help_text }}</div>
                 {% endif %}
@@ -37,4 +46,32 @@
     </div>
 
 </div>
+
+
+<div id="static-token-modal" class="token-modal hidden">
+
+    <div class="token-modal-content">
+
+        <div class="token-modal-header">
+            <h2>Elegir imagen</h2>
+            <button id="close-static-token" class="token-close-btn">✕</button>
+        </div>
+
+        <h3>Tokens estáticos</h3>
+        <div class="token-grid">
+            {% for t in static_tokens %}
+                <div class="token-choice" data-path="{{ t.path }}">
+                    <img src="{% static t.path %}" class="token-choice-img">
+                    <div class="token-choice-name">{{ t.name }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'cantrip/js/character_create.js' %}"></script>
 {% endblock %}

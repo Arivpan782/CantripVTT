@@ -12,6 +12,7 @@
 <div class="board-controls">
 
     {% if role == "DM" %}
+        <button id="add-map-btn" class="btn btn-moss btn-sm">Cambiar mapa</button>
         <button id="add-token-btn" class="btn btn-moss btn-sm">Añadir token</button>
         <button id="clear-tokens-btn" class="btn btn-danger btn-sm">Limpiar tokens</button>
     {% endif %}
@@ -20,15 +21,8 @@
         <img src="{% static 'assets/dice/d20.png' %}" class="dice-open-icon">
     </button>
 
-    {% if role == "DM" %}
-        <select id="map-selector" class="map-selector">
-            <option value="">-- Seleccionar mapa de assets --</option>
-            {% for map in static_maps %}
-                <option value="{{ map }}">{{ map|basename }}</option>
-            {% endfor %}
-        </select>
-    {% endif %}
 </div>
+
 
 <div class="board-layout">
 
@@ -36,7 +30,11 @@
         <div id="board-root"
              data-board-id="{{ board.id }}"
              data-role="{{ role }}"
-             data-background="{% if board.background_image %}{{ board.background_image.url }}{% elif board.background_static %}{% static board.background_static %}{% endif %}">
+             data-background="{% if board.background_image %}{{ board.background_image.url }}{% elif board.background_static %}{% static board.background_static %}{% endif %}"
+             data-upload-map-url="/boards/{{ board.id }}/upload_map/"
+             data-static-base="{% static '' %}"
+             data-csrf="{{ csrf_token }}">
+
             <script id="tokens-data" type="application/json">
                 {{ board.tokens|safe }}
             </script>
@@ -64,7 +62,6 @@
 
 </div>
 
-<!-- MODAL DE DADOS -->
 <div id="dice-modal" class="dice-modal hidden">
     <div class="dice-modal-content">
 
@@ -129,7 +126,6 @@
                 </div>
             </div>
 
-<!-- MODAL DE TOKENS -->
 <div id="add-token-modal" class="token-modal hidden">
 
     <div class="token-modal-content">
@@ -179,6 +175,36 @@
 
     </div>
 </div>
+
+<div id="add-map-modal" class="token-modal hidden">
+
+    <div class="token-modal-content">
+
+        <div class="token-modal-header">
+            <h2>Elegir mapa</h2>
+            <button id="close-add-map" class="token-close-btn">✕</button>
+        </div>
+
+        <h3>Mapas estáticos</h3>
+        <div class="map-grid">
+            {% for m in static_maps %}
+               <div class="map-choice" data-map="{{ m }}">
+                    <img src="{% static 'assets/maps/' %}{{ m }}" class="map-choice-img">
+                    <div class="map-choice-name">{{ m|basename }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <h3>Subir mapa propio</h3>
+        <input type="file" id="map-upload" accept="image/*" class="token-upload">
+
+        <button id="apply-map-btn" class="btn btn-moss w-100 mt-3">
+            Aplicar mapa
+        </button>
+
+    </div>
+</div>
+
 
 {% endblock %}
 
