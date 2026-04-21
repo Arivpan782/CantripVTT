@@ -644,3 +644,104 @@ if (createTokenBtn) {
         });
     });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const root = document.getElementById("board-root");
+    const uploadUrl = root.dataset.uploadMapUrl;
+    const staticBase = root.dataset.staticBase;
+    const csrf = root.dataset.csrf;
+
+    const mapModal = document.getElementById("add-map-modal");
+    const openMapBtn = document.getElementById("add-map-btn");
+    const closeMapBtn = document.getElementById("close-add-map");
+    const applyMapBtn = document.getElementById("apply-map-btn");
+    const uploadInput = document.getElementById("map-upload");
+
+    let selectedMap = null;
+    let uploadedMap = null;
+
+    if (openMapBtn) {
+        openMapBtn.addEventListener("click", () => {
+            mapModal.classList.remove("hidden");
+        });
+    }
+
+    if (closeMapBtn) {
+        closeMapBtn.addEventListener("click", () => {
+            mapModal.classList.add("hidden");
+        });
+    }
+
+    document.querySelectorAll("#add-map-modal .map-choice").forEach(choice => {
+        choice.addEventListener("click", () => {
+
+            document.querySelectorAll("#add-map-modal .map-choice")
+                .forEach(c => c.classList.remove("selected"));
+
+            choice.classList.add("selected");
+
+            selectedMap = choice.dataset.map;
+            uploadedMap = null;
+
+            if (uploadInput) {
+                uploadInput.value = "";
+            }
+        });
+    });
+
+
+    if (uploadInput) {
+        uploadInput.addEventListener("change", () => {
+            selectedMap = null;
+            uploadedMap = uploadInput.files[0] || null;
+
+            document.querySelectorAll("#add-map-modal .map-choice")
+                .forEach(c => c.classList.remove("selected"));
+        });
+
+    }
+
+    applyMapBtn.addEventListener("click", () => {
+
+        if (uploadedMap) {
+            const formData = new FormData();
+            formData.append("map", uploadedMap);
+
+            fetch(uploadUrl, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrf },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                const url = data.url;
+
+                backgroundImage = new Image();
+                backgroundImage.onload = () => drawBoard();
+                backgroundImage.src = url;
+
+                root.dataset.background = url;
+
+                mapModal.classList.add("hidden");
+                uploadedMap = null;
+                uploadInput.value = "";
+            });
+
+            return;
+        }
+
+        if (selectedMap) {
+            const url = staticBase + "assets/maps/" + selectedMap;
+
+            backgroundImage = new Image();
+            backgroundImage.onload = () => drawBoard();
+            backgroundImage.src = url;
+
+            root.dataset.background = url;
+
+            mapModal.classList.add("hidden");
+        }
+    });
+
+});

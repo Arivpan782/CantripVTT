@@ -224,6 +224,22 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tokens_path = os.path.join(settings.BASE_DIR, "static", "assets", "tokens")
+        static_tokens = []
+
+        if os.path.exists(tokens_path):
+            for f in os.listdir(tokens_path):
+                if f.lower().endswith((".png", ".jpg", ".jpeg")):
+                    static_tokens.append({
+                        "name": os.path.splitext(f)[0],
+                        "path": f"assets/tokens/{f}"
+                    })
+
+        context["static_tokens"] = static_tokens
+        return context
+
 
 class CharacterListView(LoginRequiredMixin, ListView):
     """
@@ -283,6 +299,20 @@ class CharacterUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["character"] = self.get_object()
+
+        tokens_path = os.path.join(settings.BASE_DIR, "static", "assets", "tokens")
+        static_tokens = []
+
+        if os.path.exists(tokens_path):
+            for f in os.listdir(tokens_path):
+                if f.lower().endswith((".png", ".jpg", ".jpeg")):
+                    static_tokens.append({
+                        "name": os.path.splitext(f)[0],
+                        "path": f"assets/tokens/{f}"
+                    })
+
+        context["static_tokens"] = static_tokens
+
         return context
 
 
@@ -614,3 +644,25 @@ class RollDiceView(LoginRequiredMixin, View):
         )
 
         return JsonResponse({"status": "ok"})
+
+class UploadMapView(LoginRequiredMixin, View):
+    """
+    Vista para subir archivos de mapa
+    """
+    def post(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
+        campaign = board.campaign
+
+        if request.user != campaign.dungeon_master:
+            raise PermissionDenied()
+
+        if "map" not in request.FILES:
+            return JsonResponse({"error": "No file"}, status=400)
+
+        file = request.FILES["map"]
+
+        board.background_image = file
+        board.background_static = None
+        board.save()
+
+        return JsonResponse({"url": board.background_image.url})
