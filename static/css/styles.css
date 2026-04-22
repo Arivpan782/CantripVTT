@@ -212,6 +212,24 @@ footer { border-top: 2px solid var(--accent); background: var(--bg-main); }
     border: 1px solid var(--accent);
 }
 
+.dice-modal-content input[type="number"],
+.dice-modal-content input[type="text"],
+.dice-modal-content select {
+    background-color: #2a2a2a;
+    border: 1px solid #4caf50;
+    color: var(--text-main);
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+.dice-modal-content input[type="number"]:focus,
+.dice-modal-content input[type="text"]:focus {
+    outline: none;
+    border-color: #6ee07a;
+    box-shadow: 0 0 4px rgba(110, 224, 122, 0.6);
+}
+
+
 .dice-modal {
     position: fixed;
     top: 0;
@@ -229,7 +247,7 @@ footer { border-top: 2px solid var(--accent); background: var(--bg-main); }
     background: var(--bg-elevated);
     color: var(--text-main);
     padding: 20px;
-    width: 320px;
+    width: 400px;
     border-radius: 8px;
     box-shadow: 0 0 12px rgba(0,0,0,0.6);
 }
@@ -264,6 +282,7 @@ footer { border-top: 2px solid var(--accent); background: var(--bg-main); }
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-bottom: 12px;
 }
 
 .dice-btn {
@@ -278,9 +297,23 @@ footer { border-top: 2px solid var(--accent); background: var(--bg-main); }
 }
 
 .dice-count {
-    width: 60px;
-    padding: 4px;
-    font-size: 16px;
+    width: 70px;
+}
+
+.dice-bonus-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dice-bonus {
+    width: 70px;
+}
+
+.dice-bonus-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .token-modal {

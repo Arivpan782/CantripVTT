@@ -81,20 +81,43 @@ class BoardChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def chat_message(self, event):
-        print("ENVIANDO A CLIENTE:", event)
-        await self.send(text_data=json.dumps(event))
+        await self.send(text_data=json.dumps({
+            "type": "chat_message",
+            "author": event["author"],
+            "text": event["text"],
+            "time": event["time"],
+        }))
 
     async def token_move(self, event):
-        await self.send(text_data=json.dumps(event))
+        await self.send(text_data=json.dumps({
+            "type": "token_move",
+            "token_id": event["token_id"],
+            "x": event["x"],
+            "y": event["y"],
+        }))
 
     async def map_change(self, event):
-        await self.send(text_data=json.dumps(event))
+        await self.send(text_data=json.dumps({
+            "type": "map_change",
+            "background_url": event["background_url"],
+        }))
 
     async def token_add(self, event):
-        await self.send(text_data=json.dumps(event))
+        await self.send(text_data=json.dumps({
+            "type": "token_add",
+            "token": event["token"],
+        }))
 
     async def token_clear(self, event):
-        await self.send(text_data=json.dumps(event))
+        await self.send(text_data=json.dumps({
+            "type": "token_clear",
+        }))
+
+    async def token_delete(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "token_delete",
+            "token_id": event["token_id"],
+        }))
 
     async def dice_roll(self, event):
         await self.send(text_data=json.dumps({
@@ -103,11 +126,5 @@ class BoardChatConsumer(AsyncWebsocketConsumer):
             "notation": event["notation"],
             "results": event["results"],
             "total": event["total"],
+            "bonus": event.get("bonus", 0),
         }))
-
-    async def token_delete(self, event):
-        await self.send(text_data=json.dumps(event))
-
-
-
-

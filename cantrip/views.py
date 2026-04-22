@@ -623,6 +623,7 @@ class RollDiceView(LoginRequiredMixin, View):
 
         sides = int(data.get("sides", 0))
         count = int(data.get("count", 0))
+        bonus = int(data.get("bonus", 0))
 
         if sides not in [4, 6, 8, 10, 12, 20, 100] or count < 1:
             return JsonResponse({"error": "Parámetros inválidos"}, status=400)
@@ -631,19 +632,27 @@ class RollDiceView(LoginRequiredMixin, View):
         rolls = [random.randint(1, sides) for _ in range(count)]
         total = sum(rolls)
 
+        notation = f"{count}d{sides}"
+        if bonus > 0:
+            notation += f" + {bonus}"
+        elif bonus < 0:
+            notation += f" {bonus}"
+
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f"board_{pk}",
             {
                 "type": "dice_roll",
                 "author": user.username,
-                "notation": f"{count}d{sides}",
+                "notation": notation,
                 "results": rolls,
-                "total": total,
+                "total": total + bonus,
+                "bonus": bonus,
             }
         )
 
         return JsonResponse({"status": "ok"})
+
 
 class UploadMapView(LoginRequiredMixin, View):
     """
