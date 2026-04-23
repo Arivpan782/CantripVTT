@@ -11,7 +11,7 @@
 
 .bg-stone { background-color: var(--bg-elevated) !important; }
 .bg-stone-dark { background-color: var(--bg-main) !important; }
-.text-moss { color: var(--accent) !important; }
+.text-moss { color: var(--text-main) !important; }
 .text-main { color: var(--text-main) !important; }
 
 .navbar { border-bottom: 3px solid var(--accent); background: var(--bg-main); }
@@ -510,6 +510,146 @@ form .form-control::-ms-input-placeholder {
     box-shadow: 0 4px 14px rgba(0,0,0,0.45) !important;
 }
 
+.character-sheet-content {
+    max-width: 700px;
+    width: 90vw;
+}
+
+.character-sheet {
+    color: var(--text-main);
+    padding: 15px;
+    background: var(--bg-elevated);
+    border-radius: 8px;
+}
+
+.character-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.character-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+    margin-bottom: 8px;
+    background-color: var(--bg-main);
+}
+
+.character-avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: var(--bg-main);
+    border: 3px solid var(--accent);
+    margin-bottom: 8px;
+}
+
+.character-header h3 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+.attributes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+    margin-bottom: 25px;
+    background: var(--bg-main);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.attr-item {
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.attr-value {
+    text-align: right;
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    font-size: 0.9rem;
+    padding: 10px 0;
+}
+
+.skill-pair {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px dotted var(--border-subtle);
+    padding-bottom: 3px;
+}
+
+.skill-name {
+    color: var(--text-muted);
+}
+
+.skill-item {
+    color: var(--text-muted);
+}
+
+.skill-mod {
+    font-family: monospace;
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.character-sheet h4 {
+    margin: 20px 0 15px 0;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 5px;
+    font-size: 1.3rem;
+}
+
+.notes-modal-content {
+    width: 600px;
+    max-width: 90vw;
+}
+
+.notes-textarea {
+    width: 100%;
+    resize: vertical;
+    background: var(--bg-elevated);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.notes-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(63, 191, 127, 0.2);
+}
+
+.notes-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.notes-save-status {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    transition: opacity 0.2s;
+}
 
 @media (max-width: 1024px) {
     .board-layout {

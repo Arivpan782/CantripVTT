@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const boardId = root.dataset.boardId;
     const role = root.dataset.role;
+    const currentUserId = parseInt(root.dataset.userId);
     const backgroundUrl = root.dataset.background;
     const uploadMapUrl = root.dataset.uploadMapUrl;
     const staticBase = root.dataset.staticBase;
@@ -221,20 +222,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 panStartY = e.clientY - offsetY;
             }
 
-            if (role !== "DM") return;
-
             const rect = canvas.getBoundingClientRect();
             const mouseX = (e.clientX - rect.left - offsetX) / scale;
             const mouseY = (e.clientY - rect.top - offsetY) / scale;
 
             const token = tokens.find(t => Math.hypot(t.x - mouseX, t.y - mouseY) <= 15 / scale);
+            if (!token) return;
 
-            if (token) {
-                draggingToken = token;
-                dragOffsetX = mouseX - token.x;
-                dragOffsetY = mouseY - token.y;
-            }
+            const isDM = role === "DM";
+            const isOwner = token.owner_id === currentUserId;
+
+            if (!isDM && !isOwner) return;
+
+            draggingToken = token;
+            dragOffsetX = mouseX - token.x;
+            dragOffsetY = mouseY - token.y;
         });
+
 
         canvas.addEventListener("mousemove", (e) => {
             if (panning) {
@@ -709,6 +713,122 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function setupNotesModal() {
+        const notesBtn = document.getElementById("open-notes-btn");
+        const notesModal = document.getElementById("notes-modal");
+        const closeNotesBtn = document.getElementById("close-notes-btn");
+        const notesTextarea = document.getElementById("notes-content");
+        const saveStatus = document.getElementById("notes-save-status");
+
+        if (!notesBtn || !notesModal || !notesTextarea) return;
+
+        let saveTimeout = null;
+        let originalContent = "";
+
+        function saveNotes(content) {
+            fetch(`/boards/${boardId}/notes/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    saveStatus.textContent = "Guardado";
+                    originalContent = content;
+                } else {
+                    saveStatus.textContent = "Error al guardar";
+                }
+            })
+            .catch(err => {
+                console.error("Error guardando notas:", err);
+                saveStatus.textContent = "Error de conexión";
+            });
+        }
+
+        function loadNotes() {
+            fetch(`/boards/${boardId}/notes/`)
+                .then(response => response.json())
+                .then(data => {
+                    notesTextarea.value = data.content || "";
+                    originalContent = data.content || "";
+                    saveStatus.textContent = "Guardado";
+                })
+                .catch(err => {
+                    console.error("Error cargando notas:", err);
+                    notesTextarea.value = "";
+                    saveStatus.textContent = "Error al cargar";
+                });
+        }
+
+        notesBtn.addEventListener("click", () => {
+            loadNotes();
+            notesModal.classList.remove("hidden");
+            notesTextarea.focus();
+        });
+
+        function closeModal() {
+            if (notesTextarea.value !== originalContent) {
+                saveNotes(notesTextarea.value);
+            }
+            notesModal.classList.add("hidden");
+        }
+
+        closeNotesBtn.addEventListener("click", closeModal);
+
+        notesModal.addEventListener("click", (e) => {
+            if (e.target === notesModal) {
+                closeModal();
+            }
+        });
+
+        notesTextarea.addEventListener("input", () => {
+            const currentContent = notesTextarea.value;
+            if (currentContent === originalContent) {
+                saveStatus.textContent = "Guardado";
+                return;
+            }
+
+            saveStatus.textContent = "Guardando...";
+
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveNotes(currentContent);
+            }, 1000);
+        });
+
+        window.addEventListener("beforeunload", () => {
+            if (notesTextarea.value !== originalContent) {
+                saveNotes(notesTextarea.value);
+            }
+        });
+    }
+
+    function setupCharacterSheetModal() {
+        const openBtn = document.getElementById("open-character-sheet-btn");
+        const modal = document.getElementById("character-sheet-modal");
+        const closeBtn = document.getElementById("close-character-sheet-btn");
+
+        if (!openBtn || !modal || !closeBtn) return;
+
+        openBtn.addEventListener("click", () => {
+            modal.classList.remove("hidden");
+        });
+
+        closeBtn.addEventListener("click", () => {
+            modal.classList.add("hidden");
+        });
+
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                modal.classList.add("hidden");
+            }
+        });
+    }
+
     initBackground();
     loadTokens();
     setupCanvas();
@@ -717,4 +837,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setupDiceModal();
     setupTokenModal();
     setupMapModal();
+    setupNotesModal();
+    setupCharacterSheetModal();
 });

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Campaign, Character, Board, Token
+from .models import Campaign, Character, Board, Token, BoardNote
 
 
 @admin.register(Campaign)
@@ -72,3 +72,13 @@ class TokenAdmin(admin.ModelAdmin):
     search_fields = ("label", "character__name", "board__name")
     list_filter = ("board",)
 
+
+@admin.register(BoardNote)
+class BoardNoteAdmin(admin.ModelAdmin):
+    """
+    Admin para notas personales en tableros
+    """
+    list_display = ("board", "user", "updated_at")
+    search_fields = ("board__name", "user__username", "content")
+    list_filter = ("board", "user")
+    readonly_fields = ("updated_at",)

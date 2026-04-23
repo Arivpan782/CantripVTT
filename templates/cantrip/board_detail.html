@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 {% load static cantrip_filters %}
 
 {% block title %}Tablero - {{ board.campaign.name }}{% endblock %}
@@ -21,6 +20,14 @@
         <img src="{% static 'assets/dice/d20.png' %}" class="dice-open-icon">
     </button>
 
+    <button id="open-notes-btn" class="btn btn-moss btn-sm">📝 Notas</button>
+
+    {% if player_character %}
+    <button id="open-character-sheet-btn" class="btn btn-moss btn-sm">
+         {{ player_character.name }}
+    </button>
+    {% endif %}
+
 </div>
 
 
@@ -30,6 +37,7 @@
         <div id="board-root"
              data-board-id="{{ board.id }}"
              data-role="{{ role }}"
+             data-user-id="{{ request.user.id }}"
              data-background="{% if board.background_image %}{{ board.background_image.url }}{% elif board.background_static %}{% static board.background_static %}{% endif %}"
              data-upload-map-url="/boards/{{ board.id }}/upload_map/"
              data-static-base="{% static '' %}"
@@ -247,6 +255,87 @@
     </div>
 </div>
 
+<div id="notes-modal" class="token-modal hidden">
+    <div class="token-modal-content notes-modal-content">
+        <div class="token-modal-header">
+            <h2>📓 Mis notas de sesión</h2>
+            <button id="close-notes-btn" class="token-close-btn">✕</button>
+        </div>
+
+        <textarea id="notes-content" class="notes-textarea" rows="15"
+                  placeholder="Escribe aquí tus notas personales... Se guardan automáticamente."></textarea>
+
+        <div class="d-flex justify-content-end mt-2">
+            <small id="notes-save-status" class="notes-save-status">Guardado</small>
+        </div>
+    </div>
+</div>
+
+{% if player_character %}
+<div id="character-sheet-modal" class="token-modal hidden">
+    <div class="token-modal-content character-sheet-content">
+        <div class="token-modal-header">
+            <h2>Ficha de personaje</h2>
+            <button id="close-character-sheet-btn" class="token-close-btn">✕</button>
+        </div>
+
+        <div class="character-sheet">
+            <div class="character-header">
+                {% if player_character.get_image %}
+                    <img src="{{ player_character.get_image }}" class="character-avatar">
+                {% else %}
+                    <div class="character-avatar-placeholder"></div>
+                {% endif %}
+                <h3>{{ player_character.name }}</h3>
+            </div>
+
+            {% with mods=player_character.get_modifiers %}
+            <div class="attributes-grid">
+                <div class="attr-item">Fuerza</div>
+                <div class="attr-value">{{ player_character.strength }} ({{ mods.strength|stringformat:"+d" }})</div>
+
+                <div class="attr-item">Destreza</div>
+                <div class="attr-value">{{ player_character.dexterity }} ({{ mods.dexterity|stringformat:"+d" }})</div>
+
+                <div class="attr-item">Constitución</div>
+                <div class="attr-value">{{ player_character.constitution }} ({{ mods.constitution|stringformat:"+d" }})</div>
+
+                <div class="attr-item">Inteligencia</div>
+                <div class="attr-value">{{ player_character.intelligence }} ({{ mods.intelligence|stringformat:"+d" }})</div>
+
+                <div class="attr-item">Sabiduría</div>
+                <div class="attr-value">{{ player_character.wisdom }} ({{ mods.wisdom|stringformat:"+d" }})</div>
+
+                <div class="attr-item">Carisma</div>
+                <div class="attr-value">{{ player_character.charisma }} ({{ mods.charisma|stringformat:"+d" }})</div>
+            </div>
+
+            <h4>Habilidades</h4>
+            <div class="skills-grid">
+                <div class="skill-pair"><span class="skill-name">Acrobacias (Des)</span> <span class="skill-mod">{{ mods.dexterity|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Atletismo (Fue)</span> <span class="skill-mod">{{ mods.strength|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Arcano (Int)</span> <span class="skill-mod">{{ mods.intelligence|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Engañar (Car)</span> <span class="skill-mod">{{ mods.charisma|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Historia (Int)</span> <span class="skill-mod">{{ mods.intelligence|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Intimidar (Car)</span> <span class="skill-mod">{{ mods.charisma|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Investigación (Int)</span> <span class="skill-mod">{{ mods.intelligence|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Juego de manos (Des)</span> <span class="skill-mod">{{ mods.dexterity|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Medicina (Sab)</span> <span class="skill-mod">{{ mods.wisdom|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Naturaleza (Int)</span> <span class="skill-mod">{{ mods.intelligence|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Percepción (Sab)</span> <span class="skill-mod">{{ mods.wisdom|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Perspicacia (Sab)</span> <span class="skill-mod">{{ mods.wisdom|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Persuasión (Car)</span> <span class="skill-mod">{{ mods.charisma|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Religión (Int)</span> <span class="skill-mod">{{ mods.intelligence|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Sigilo (Des)</span> <span class="skill-mod">{{ mods.dexterity|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Supervivencia (Sab)</span> <span class="skill-mod">{{ mods.wisdom|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Trato con animales (Sab)</span> <span class="skill-mod">{{ mods.wisdom|stringformat:"+d" }}</span></div>
+                <div class="skill-pair"><span class="skill-name">Interpretación (Car)</span> <span class="skill-mod">{{ mods.charisma|stringformat:"+d" }}</span></div>
+            </div>
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {% endblock %}
 
