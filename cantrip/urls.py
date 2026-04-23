@@ -1,5 +1,12 @@
 from django.urls import path
-from .views import *
+from .views import (
+    HomeView,
+    CampaignListView, CampaignCreateView, CampaignDetailView, CampaignUpdateView, CampaignDeleteView,
+    CharacterListView, CharacterCreateView, CharacterDetailView, CharacterUpdateView, CharacterDeleteView,
+    BoardDetailView, BoardTokensView, TokenMoveView, add_token, delete_token, ClearTokensView,
+    SetBoardMapView, UploadMapView, OpenBoardView, JoinBoardView, RollDiceView, BoardNoteAPIView,
+)
+
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path("campaigns/", CampaignListView.as_view(), name="campaign_list"),
@@ -23,6 +30,5 @@ urlpatterns = [
     path("campaigns/<int:pk>/open_board/", OpenBoardView.as_view(), name="open_board"),
     path("campaigns/<int:pk>/join_board/", JoinBoardView.as_view(), name="join_board"),
     path("boards/<int:pk>/roll_dice/", RollDiceView.as_view(), name="roll_dice"),
-
-
+    path("boards/<int:board_id>/notes/", BoardNoteAPIView.as_view(), name="board_notes_api"),
 ]

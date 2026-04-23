@@ -3,6 +3,7 @@ from .models import Campaign, Character
 from django.conf import settings
 import os
 
+
 class CampaignForm(forms.ModelForm):
     """
     Formulario para crear campañas
@@ -44,7 +45,7 @@ class CharacterForm(forms.ModelForm):
         ]
         labels = {
             "name": "Nombre del personaje",
-            "campaign": "Campaña (opcional)",
+            "campaign": "Campaña",
             "image_upload": "Imagen subida",
             "image_static": "Imagen estática",
             "strength": "Fuerza",
@@ -67,20 +68,20 @@ class CharacterForm(forms.ModelForm):
             "charisma": forms.NumberInput(attrs={"class": "form-control"}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        if user:
+            self.fields["campaign"].queryset = Campaign.objects.filter(players=user)
 
         tokens_path = os.path.join(settings.BASE_DIR, "static/assets/tokens")
         files = sorted(f for f in os.listdir(tokens_path) if f.endswith(".png"))
 
-        choices = [("", "Ninguna")] + [
-            (f"assets/tokens/{f}", f) for f in files
-        ]
+        choices = [("", "Ninguna")] + [(f"assets/tokens/{f}", f) for f in files]
         self.fields["image_static"].choices = choices
 
-        image_static_widget = self.fields["image_static"].widget
-        existing_classes = image_static_widget.attrs.get("class", "")
-        image_static_widget.attrs["class"] = (existing_classes + " select-readonly").strip()
+        widget = self.fields["image_static"].widget
+        widget.attrs["class"] = (widget.attrs.get("class", "") + " select-readonly").strip()
 
 
 class DeleteConfirmForm(forms.Form):

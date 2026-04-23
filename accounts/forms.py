@@ -1,6 +1,7 @@
 from django import forms
 from accounts.models import User
 
+
 class RegisterForm(forms.ModelForm):
     """
     Modelo form para registrar usuario
@@ -37,7 +38,6 @@ class RegisterForm(forms.ModelForm):
                 "placeholder": "Nombre visible"
             }),
         }
-
 
     def clean(self):
         """

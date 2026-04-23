@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
 from accounts.models import User
-from .models import Campaign, Character, Board, Token
+from .models import Campaign, Character, Board, Token, BoardNote
 from .forms import CampaignForm, CharacterForm, DeleteConfirmForm, AddPlayerForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
@@ -16,15 +16,14 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
 from django.core.files.base import ContentFile
-import base64
-from django.core.paginator import Paginator
 
-import os
-from django.conf import settings
-from django.views.generic import TemplateView
 
 def chunk_list(items, size):
+    """
+    Divide una lista en sublistas de tamaño fijo.
+    """
     return [items[i:i + size] for i in range(0, len(items), size)]
+
 
 class HomeView(TemplateView):
     """
@@ -53,7 +52,6 @@ class HomeView(TemplateView):
         return context
 
 
-
 class CampaignListView(LoginRequiredMixin, ListView):
     """
     Vista CBV para poder ver una lista de las campañas asociadas al user
@@ -64,18 +62,14 @@ class CampaignListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-
         campaigns_as_dm = Campaign.objects.filter(dungeon_master=user)
-
         campaigns_as_player = Campaign.objects.filter(players=user)
-
         return campaigns_as_dm.union(campaigns_as_player)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["user"] = self.request.user
         return context
-
 
 
 class CampaignCreateView(LoginRequiredMixin, CreateView):
@@ -90,8 +84,6 @@ class CampaignCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.dungeon_master = self.request.user
         return super().form_valid(form)
-
-
 
 
 class CampaignDetailView(LoginRequiredMixin, DetailView):
@@ -220,6 +212,11 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
     login_url = "login"
     redirect_field_name = "next"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
@@ -290,11 +287,14 @@ class CharacterUpdateView(LoginRequiredMixin, UpdateView):
 
     def dispatch(self, request, *args, **kwargs):
         character = self.get_object()
-
         if character.user != request.user:
             raise PermissionDenied("No tienes permiso para editar este personaje.")
-
         return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -312,7 +312,6 @@ class CharacterUpdateView(LoginRequiredMixin, UpdateView):
                     })
 
         context["static_tokens"] = static_tokens
-
         return context
 
 
@@ -343,12 +342,12 @@ class CharacterDeleteView(LoginRequiredMixin, DeleteView):
         return self.get(request, form=form)
 
 
-
 def list_static_maps():
+    """
+    Retorna una lista de nombres de archivo de mapas estáticos disponibles.
+    """
     folder = os.path.join(settings.BASE_DIR, "static", "assets", "maps")
     return [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
-
-
 
 
 class BoardDetailView(LoginRequiredMixin, DetailView):
@@ -376,14 +375,11 @@ class BoardDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
 
         campaign = self.object.campaign
-        context["role"] = "DM" if self.request.user == campaign.dungeon_master else "PLAYER"
-
+        user = self.request.user
+        context["role"] = "DM" if user == campaign.dungeon_master else "PLAYER"
+        context["player_character"] = campaign.characters.filter(user=user).first()
         context["static_maps"] = list_static_maps()
-
         context["characters"] = campaign.characters.select_related("user")
-
-        import os
-        from django.conf import settings
 
         tokens_path = os.path.join(settings.BASE_DIR, "static/assets/tokens")
         files = sorted(f for f in os.listdir(tokens_path) if f.endswith(".png"))
@@ -409,7 +405,6 @@ class BoardTokensView(LoginRequiredMixin, View):
             raise PermissionDenied("No tienes permiso para ver este tablero.")
 
         tokens = board.tokens.all()
-
         data = []
         for token in tokens:
             data.append({
@@ -418,9 +413,13 @@ class BoardTokensView(LoginRequiredMixin, View):
                 "y": token.y,
                 "color": token.color,
                 "label": token.label or "",
+                "image": token.get_image(),
+                "size": token.size,
+                "owner_id": token.character.user.id if token.character else None,
             })
 
         return JsonResponse({"tokens": data})
+
 
 class SetBoardMapView(LoginRequiredMixin, View):
     def post(self, request, pk):
@@ -431,8 +430,6 @@ class SetBoardMapView(LoginRequiredMixin, View):
             raise PermissionDenied()
 
         map_path = request.POST.get("map")
-
-        # Si elige un mapa estático, limpiamos el mapa subido
         board.background_static = map_path
         board.background_image = None
         board.save()
@@ -453,8 +450,11 @@ class TokenMoveView(LoginRequiredMixin, View):
         campaign = board.campaign
         user = request.user
 
-        if campaign.dungeon_master != user:
-            raise PermissionDenied("Solo el DM puede mover tokens.")
+        is_dm = campaign.dungeon_master == user
+        is_owner = token.character and token.character.user == user
+
+        if not is_dm and not is_owner:
+            raise PermissionDenied("No tienes permiso para mover este token.")
 
         try:
             data = json.loads(request.body.decode("utf-8"))
@@ -474,9 +474,11 @@ class TokenMoveView(LoginRequiredMixin, View):
         return JsonResponse({"status": "ok"})
 
 
-
 @require_POST
 def add_token(request, board_id):
+    """
+    Añade un nuevo token al tablero (solo DM).
+    """
     board = get_object_or_404(Board, id=board_id)
     campaign = board.campaign
 
@@ -490,9 +492,7 @@ def add_token(request, board_id):
     size = int(request.POST.get("size", 60))
 
     token = Token(board=board, x=x, y=y)
-
     token.size = size
-
 
     if token_type == "character":
         character_id = request.POST.get("character_id")
@@ -504,8 +504,6 @@ def add_token(request, board_id):
         static_path = request.POST.get("static_path")
         if not static_path:
             return JsonResponse({"error": "Falta static_path"}, status=400)
-
-        from django.conf import settings
 
         static_full_path = os.path.join(settings.BASE_DIR, "static", static_path)
         filename = os.path.basename(static_path)
@@ -522,8 +520,6 @@ def add_token(request, board_id):
         file = request.FILES["upload"]
         token.image = file
         token.label = label or os.path.splitext(file.name)[0]
-
-
     else:
         return JsonResponse({"error": "Tipo de token inválido"}, status=400)
 
@@ -538,12 +534,16 @@ def add_token(request, board_id):
             "image": token.get_image(),
             "color": token.color,
             "size": token.size,
+            "owner_id": token.character.user.id if token.character else None,
         }
     })
 
 
 @require_POST
 def delete_token(request, token_id):
+    """
+    Elimina un token del tablero (solo DM).
+    """
     token = get_object_or_404(Token, id=token_id)
     board = token.board
 
@@ -556,9 +556,6 @@ def delete_token(request, token_id):
     token.delete()
 
     return JsonResponse({"status": "ok"})
-
-
-
 
 
 class ClearTokensView(LoginRequiredMixin, View):
@@ -576,8 +573,6 @@ class ClearTokensView(LoginRequiredMixin, View):
         board.tokens.all().delete()
 
         return JsonResponse({"status": "ok"})
-
-
 
 
 class OpenBoardView(LoginRequiredMixin, View):
@@ -618,7 +613,7 @@ class RollDiceView(LoginRequiredMixin, View):
 
         try:
             data = json.loads(request.body.decode("utf-8"))
-        except:
+        except Exception:
             return JsonResponse({"error": "JSON inválido"}, status=400)
 
         sides = int(data.get("sides", 0))
@@ -669,9 +664,49 @@ class UploadMapView(LoginRequiredMixin, View):
             return JsonResponse({"error": "No file"}, status=400)
 
         file = request.FILES["map"]
-
         board.background_image = file
         board.background_static = None
         board.save()
 
         return JsonResponse({"url": board.background_image.url})
+
+
+class BoardNoteAPIView(LoginRequiredMixin, View):
+    def get(self, request, board_id):
+        board = get_object_or_404(Board, id=board_id)
+        campaign = board.campaign
+        user = request.user
+
+        if campaign.dungeon_master != user and user not in campaign.players.all():
+            raise PermissionDenied("No tienes permiso para acceder a este tablero.")
+
+        note, _ = BoardNote.objects.get_or_create(
+            board=board,
+            user=user,
+            defaults={"content": ""}
+        )
+
+        return JsonResponse({"content": note.content})
+
+    def post(self, request, board_id):
+        board = get_object_or_404(Board, id=board_id)
+        campaign = board.campaign
+        user = request.user
+
+        if campaign.dungeon_master != user and user not in campaign.players.all():
+            raise PermissionDenied("No tienes permiso para acceder a este tablero.")
+
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+
+        content = data.get("content", "")
+
+        note, _ = BoardNote.objects.update_or_create(
+            board=board,
+            user=user,
+            defaults={"content": content}
+        )
+
+        return JsonResponse({"status": "ok", "content": note.content})

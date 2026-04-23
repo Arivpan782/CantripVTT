@@ -81,6 +81,20 @@ class Character(models.Model):
             return f"/static/{self.image_static}"
         return None
 
+    def get_modifier(self, attribute):
+        value = getattr(self, attribute, 10)
+        return (value - 10) // 2
+
+    def get_modifiers(self):
+        return {
+            "strength": self.get_modifier("strength"),
+            "dexterity": self.get_modifier("dexterity"),
+            "constitution": self.get_modifier("constitution"),
+            "intelligence": self.get_modifier("intelligence"),
+            "wisdom": self.get_modifier("wisdom"),
+            "charisma": self.get_modifier("charisma"),
+        }
+
 
 class Board(models.Model):
     """
@@ -161,3 +175,28 @@ class Token(models.Model):
         if self.image:
             return self.image.url
         return None
+
+
+class BoardNote(models.Model):
+    """
+    Notas personales de un usuario en un tablero
+    """
+    board = models.ForeignKey(
+        Board,
+        on_delete=models.CASCADE,
+        related_name="notes"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="board_notes"
+    )
+    content = models.TextField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("board", "user")
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"Notas de {self.user} en {self.board}"
