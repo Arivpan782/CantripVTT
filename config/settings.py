@@ -48,10 +48,16 @@ ASGI_APPLICATION = "CantripVTT.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    }
+} if not DEBUG else {
+    "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
-
 
 AUTH_USER_MODEL = 'accounts.User'
 
