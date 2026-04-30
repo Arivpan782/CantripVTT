@@ -7,3 +7,4 @@ Pillow==12.1.1
 channels
 daphne
 whitenoise
+channels_redis
