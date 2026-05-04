@@ -191,7 +191,7 @@
             {% for c in characters %}
                 <div class="token-choice" data-type="character" data-id="{{ c.id }}">
                     {% if c.get_image %}
-                        <img src="{{ c.get_image }}" class="token-choice-img">
+                        <img data-src="{{ c.get_image }}" class="token-choice-img lazy-modal-img">
                     {% else %}
                         <div class="token-choice-placeholder"></div>
                     {% endif %}
@@ -204,7 +204,7 @@
         <div class="token-grid">
             {% for t in static_tokens %}
                 <div class="token-choice" data-type="static" data-path="{{ t.path }}">
-                    <img src="{% static t.path %}" class="token-choice-img">
+                    <img data-src="{% static t.path %}" class="token-choice-img lazy-modal-img">
                     <div class="token-choice-name">{{ t.name }}</div>
                 </div>
             {% endfor %}
@@ -239,7 +239,7 @@
         <div class="map-grid">
             {% for m in static_maps %}
                <div class="map-choice" data-map="{{ m }}">
-                    <img src="{% static 'assets/maps/' %}{{ m }}" class="map-choice-img">
+                    <img data-src="{% static 'assets/maps/' %}{{ m }}" class="map-choice-img lazy-modal-img">
                     <div class="map-choice-name">{{ m|basename }}</div>
                 </div>
             {% endfor %}
@@ -343,5 +343,33 @@
 <script>
     const username = "{{ request.user.username }}";
 </script>
+
+<script>
+    document.querySelectorAll('.token-modal').forEach(function(modal) {
+        modal.addEventListener('transitionend', function() {
+            if (!modal.classList.contains('hidden')) {
+                modal.querySelectorAll('.lazy-modal-img').forEach(function(img) {
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+                });
+            }
+        });
+        const openerId = modal.id.replace('-modal', '-btn');
+        const opener = document.getElementById(openerId);
+        if (opener) {
+            opener.addEventListener('click', function() {
+                modal.querySelectorAll('.lazy-modal-img').forEach(function(img) {
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+                });
+            });
+        }
+    });
+</script>
+
 <script src="{% static 'cantrip/js/board.js' %}?v=2"></script>
 {% endblock %}
