@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-y3kyws8daqv%0t&8u!s=+-e5(*u4mex06x0-*(i^$%_5r(3)by
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'cantrip.apps.CantripConfig',
 ]
 
-ASGI_APPLICATION = "CantripVTT.asgi.application"
+ASGI_APPLICATION = "config.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
@@ -162,18 +162,17 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-#Descomentar esto cuando termine el desarrollo o haga pruebas de despliegue
 
-# SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = True
 
-# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
-# CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
-# SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_SECONDS = 31536000
 
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
-# SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_PRELOAD = True
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
