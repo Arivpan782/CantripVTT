@@ -19,8 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const staticBase = root.dataset.staticBase;
     const csrf = root.dataset.csrf;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${protocol}://${window.location.host}/ws/board/${boardId}/`);
+    const wsProtocol = window.location.hostname === 'localhost' ? 'ws' : 'wss';
+    const ws = new WebSocket(`${wsProtocol}://${window.location.host}/ws/board/${boardId}/`);
 
     const CANVAS_WIDTH = 1200;
     const CANVAS_HEIGHT = 800;
