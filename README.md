@@ -39,6 +39,9 @@ Virtual Tabletop sencilla y centrada para jugar a juegos de rol. Permite usar ma
 
 ### Infraestructura
 - **Docker** + **Docker Compose** - Contenedorización
+- **Redis** - Canal de comunicación para WebSockets en producción
+- **Nginx** - Proxy inverso y servidor de archivos estáticos
+- **Let's Encrypt** - Certificados SSL/TLS gratuitos
 - **GitHub Actions** - CI/CD automatizado (opcional)
 
 ---
@@ -64,13 +67,20 @@ Esto inicia:
 1. Base de datos PostgreSQL
 2. Aplicación web con Daphne en http://localhost:8000
 
-### 3. Crear un superusuario
+### 3. Ejecutar migraciones y recopilar estáticos
+
+```bash
+docker compose exec web python manage.py migrate --noinput
+docker compose exec web python manage.py collectstatic --noinput
+```
+
+### 4. Crear un superusuario
 
 ```bash
 docker compose exec web python manage.py createsuperuser
 ```
 
-### 4. Acceder
+### 5. Acceder
 
 - Aplicación: http://localhost:8000
 - Panel de administración: http://localhost:8000/admin/
@@ -170,6 +180,7 @@ CantripVTT/
 | Variable | Descripción |
 |---|---|
 | `SECRET_KEY` | Clave secreta de Django |
+| `DEBUG` | Modo de depuración (`True` en local, `False` en producción) |
 | `DB_NAME` | Nombre de la base de datos PostgreSQL |
 | `DB_USER` | Usuario de PostgreSQL |
 | `DB_PASSWORD` | Contraseña de PostgreSQL |
@@ -188,7 +199,7 @@ CantripVTT/
 5. Abre el tablero virtual.
 6. Como DM: carga un mapa, añade tokens, mueve fichas.
 7. Como Jugador: mueve tu token, chatea, tira dados, toma notas.
-8. Consulta la ficha de tu personaje en cualquier momento.
+8. Pulsa el botón con el nombre de tu personaje en la barra del tablero para consultar su ficha con atributos, modificadores y habilidades.
 
 ---
 
