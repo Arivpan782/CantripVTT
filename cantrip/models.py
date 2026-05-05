@@ -155,6 +155,12 @@ class Token(models.Model):
         null=True,
         help_text="Imagen del token (si no es un personaje)"
     )
+    static_path = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Ruta estática del token (assets/tokens/...), evita copia a media"
+    )
     size = models.IntegerField(default=60, help_text="Tamaño base del token en píxeles")
     x = models.FloatField(help_text="Posición X en el tablero")
     y = models.FloatField(help_text="Posición Y en el tablero")
@@ -172,10 +178,11 @@ class Token(models.Model):
     def get_image(self):
         if self.character:
             return self.character.get_image()
+        if self.static_path:
+            return f"/static/{self.static_path}"
         if self.image:
             return self.image.url
         return None
-
 
 class BoardNote(models.Model):
     """

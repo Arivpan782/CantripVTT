@@ -500,18 +500,17 @@ def add_token(request, board_id):
         token.character = character
         token.label = character.name
 
+
     elif token_type == "static":
+
         static_path = request.POST.get("static_path")
+
         if not static_path:
             return JsonResponse({"error": "Falta static_path"}, status=400)
 
-        static_full_path = os.path.join(settings.BASE_DIR, "static", static_path)
-        filename = os.path.basename(static_path)
+        token.static_path = static_path
 
-        with open(static_full_path, "rb") as f:
-            token.image.save(filename, ContentFile(f.read()), save=False)
-
-        token.label = label or os.path.splitext(filename)[0]
+        token.label = label or os.path.splitext(os.path.basename(static_path))[0]
 
     elif token_type == "upload":
         if "upload" not in request.FILES:
